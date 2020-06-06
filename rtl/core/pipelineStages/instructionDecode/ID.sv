@@ -86,6 +86,7 @@ begin
             case(ID_instruction[6:0])
                 `LUI: begin
                     immediate   = {ID_instruction[31:12], 12'b0};
+                    rs2_mux     = 1'b1;                 
                 end
                 
                 `IMM_REG_ALU: begin
