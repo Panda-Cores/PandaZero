@@ -1,8 +1,5 @@
 #include <verilated.h>
 #include "Vriscv_top.h"
-#include "Vriscv_top_core_top.h"
-#include "Vriscv_top_instructionFetch.h"
-#include "Vriscv_top_riscv_top.h"
 
 #if VM_TRACE
 # include <verilated_vcd_c.h>
