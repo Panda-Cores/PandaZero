@@ -3,8 +3,8 @@ My very own RISC-V computer, which will maybe someday run as a microcontroller!
 
 Features so far:
 * 5 Stage Pipeline (IF, ID, EX, MEM, WB)
-* Basic load/store instructions (only word level so far)
-* Basic arithmetic instructions (add, sub, shift,...) both register-register and register-immediate
+* Basic load/store instructions (only word level)
+* Basic arithmetic instructions (add, sub, shift,...) both register-register and register-immediate (only word level)
 * Memory controller
 
 Upcoming features:
