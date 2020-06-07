@@ -10,17 +10,32 @@ module core_top
 #(
     parameter BITSIZE = 32
 )(
-    input                   clk,
-    input                   resetn_i
+    input                           clk,
+    input                           resetn_i,
+    //IF-MEM (TODO: caches)
+    output [BITSIZE - 1 : 0]        MEM_addr_o,
+    input  [BITSIZE - 1 : 0]        MEM_data_i,
+    output                          MEM_read_o,
+    input                           MEM_valid_i
 );
 
+assign MEM_read_o = IF_MEM_read;
+assign MEM_addr_o = IF_MEM_addr;
+assign IF_MEM_data =  MEM_data_i;
+assign IF_MEM_valid = MEM_valid_i;
 
-logic                                       resetn;
+logic                           resetn;
 
 //IF-ID
 logic                           ID_IF_get;
 logic                           IF_ID_give;
 logic [31 : 0]                  IF_ID_instr;
+
+//IF-MEM
+logic [BITSIZE - 1: 0]          IF_MEM_addr;
+logic [31 : 0]                  IF_MEM_data;
+logic                           IF_MEM_read;
+logic                           IF_MEM_valid;
 
 //ID-EX
 logic                           EX_ID_get;
@@ -28,12 +43,14 @@ logic                           ID_EX_give;
 logic [31 : 0]                  ID_EX_instr;
 logic [BITSIZE - 1 : 0]         ID_EX_rs1;
 logic [BITSIZE - 1 : 0]         ID_EX_rs2;
+logic [BITSIZE - 1 : 0]         ID_EX_imm;
 
 //ID
 logic [4 : 0]                   ID_REG_rs1;
 logic [4 : 0]                   ID_REG_rs2;
 logic [BITSIZE - 1 : 0]         REG_ID_rs1_d;
 logic [BITSIZE - 1 : 0]         REG_ID_rs2_d;
+logic                           inv_instr;
 
 
 //EX-WB
@@ -85,7 +102,12 @@ IF #(
     .resetn_i       (   resetn      ),
     .ID_IF_get_i    (   ID_IF_get   ),
     .IF_ID_give_o   (   IF_ID_give  ),
-    .IF_ID_instr_o  (   IF_ID_instr )
+    .IF_ID_instr_o  (   IF_ID_instr ),
+    //TODO: Cache
+    .MEM_addr_o     (   IF_MEM_addr ),
+    .MEM_data_i     (   IF_MEM_data ),
+    .MEM_read_o     (   IF_MEM_read ),
+    .MEM_valid_i    (   IF_MEM_valid)
 );
 
 ID #(
@@ -93,6 +115,7 @@ ID #(
 ) ID_i (
     .clk                (   clk         ),
     .resetn_i           (   resetn      ),
+    .inv_instr_o        (   inv_instr   ),
     .IF_ID_give_i       (   IF_ID_give  ),
     .ID_IF_get_o        (   ID_IF_get   ),
     .IF_ID_instr_i      (   IF_ID_instr ),
@@ -101,6 +124,7 @@ ID #(
     .ID_EX_instruction_o(   ID_EX_instr ),
     .ID_EX_rs1_o        (   ID_EX_rs1   ),
     .ID_EX_rs2_o        (   ID_EX_rs2   ),
+    .ID_EX_imm_o        (   ID_EX_imm   ),
     .ID_REG_rs1_o       (   ID_REG_rs1  ),
     .ID_REG_rs2_o       (   ID_REG_rs2  ),
     .REG_ID_rs1_d_i     (   REG_ID_rs1_d),
@@ -118,11 +142,14 @@ EX #(
     .ID_EX_instruction_i(   ID_EX_instr ),
     .ID_EX_rs1_i        (   ID_EX_rs1   ),
     .ID_EX_rs2_i        (   ID_EX_rs2   ),
+    .ID_EX_imm_i        (   ID_EX_imm   ),
     .WB_EX_get_i        (   WB_EX_get   ),
     .EX_WB_give_o       (   EX_WB_give  ),
     .EX_WB_instruction_o(   EX_WB_instr ),
     .EX_WB_d_o          (   EX_WB_d     )
 );
+
+//TODO: MEM stage
 
 WB #(
     .BITSIZE            (   BITSIZE     )

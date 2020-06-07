@@ -21,6 +21,7 @@ module EX
     input [31 : 0]                              ID_EX_instruction_i,
     input [BITSIZE - 1 : 0]                     ID_EX_rs1_i,
     input [BITSIZE - 1 : 0]                     ID_EX_rs2_i,
+    input [BITSIZE - 1 : 0]                     ID_EX_imm_i,
     //EX-WB
     input                                       WB_EX_get_i,
     output                                      EX_WB_give_o,
@@ -34,15 +35,22 @@ logic [31 : 0]                                  EX_instruction;
 
 logic [BITSIZE - 1 : 0]                         EX_d0;
 logic [BITSIZE - 1 : 0]                         EX_d1;
+logic [BITSIZE - 1 : 0]                         EX_imm;
+
+logic [BITSIZE - 1 : 0]                         ALU_d0;
+logic [BITSIZE - 1 : 0]                         ALU_d1;
 
 logic [3 : 0]                                   alu_operation;
 logic [BITSIZE - 1 : 0]                         alu_result;
 logic                                           alu_overflow;
+logic                                           alu_d1_mux;
 
 logic [BITSIZE - 1 : 0]                         EX_result;
 logic [BITSIZE - 1 : 0]                         WB_d;
 
 assign WB_d = EX_result;
+assign ALU_d0 = EX_d0;
+assign ALU_d1 = (alu_d1_mux) ? EX_imm : EX_d1;
 
 always_ff@(posedge clk)
 begin
@@ -60,6 +68,7 @@ always_comb
 begin
     EX_ID_get_o     = 1'b0;
     EX_WB_give_o    = 1'b0;
+    alu_d1_mux      = 1'b0;
 
     case(CS)
         GET_INSTR: begin
@@ -70,6 +79,7 @@ begin
                 NS              = EXECUTE_INSTR;
                 EX_d0           = ID_EX_rs1_i;
                 EX_d1           = ID_EX_rs2_i;
+                EX_imm          = ID_EX_imm_i;
             end
         end
 
@@ -78,6 +88,7 @@ begin
                 `LUI: begin
                     alu_operation = `ADDITION;
                     EX_result = alu_result;
+                    alu_d1_mux      = 1'b1;
                 end
 
                 `IMM_REG_ALU: begin
@@ -86,10 +97,21 @@ begin
                     else
                         alu_operation = {1'b0, EX_instruction[14:12]};
                     EX_result = alu_result;
+                    alu_d1_mux      = 1'b1;
                 end
 
                 `REG_REG_ALU: begin
                     alu_operation = {EX_instruction[30], EX_instruction[14:12]};
+                end
+
+                `LOAD: begin
+                    alu_operation = `ADDITION;
+                    alu_d1_mux      = 1'b1;
+                end
+
+                `STORE: begin
+                    alu_operation = `ADDITION;
+                    alu_d1_mux      = 1'b1;
                 end
                 default: begin
                 end
@@ -113,8 +135,8 @@ end
 alu #(
     .BITSIZE    (   BITSIZE         )
 ) alu_i (
-    .A_i        (   EX_d0           ),
-    .B_i        (   EX_d1           ),
+    .A_i        (   ALU_d0          ),
+    .B_i        (   ALU_d1          ),
     .operation_i(   alu_operation   ),
     .R_o        (   alu_result      ),
     .overflow_o (   alu_overflow    )

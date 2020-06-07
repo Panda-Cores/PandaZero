@@ -28,6 +28,8 @@ logic                       incr_offset;
 
 logic [$clog2(N_CACHELINE_LENGTH) - 1 : 0] offset;
 
+genvar ii;
+
 enum {LOAD, STORE} CS, NS;
 
 // Read cache line
@@ -47,10 +49,9 @@ begin
     if(store_i)
     begin
         tag = addr_i[BITSIZE - 1 : TAGSIZE];
-        cache_line[addr_i[$clog2(N_CACHELINE_LENGTH)- 1 : 0]] = data_i[BITSIZE - 1 : 0]
-        cache_line[addr_i[$clog2(N_CACHELINE_LENGTH)- 1 : 0] + 1] = data_i[(2 * BITSIZE) - 1 : BITSIZE]
-        cache_line[addr_i[$clog2(N_CACHELINE_LENGTH)- 1 : 0] + 2] = data_i[(3 * BITSIZE) - 1 : 2 *BITSIZE]
-        cache_line[addr_i[$clog2(N_CACHELINE_LENGTH)- 1 : 0] + 3] = data_i[(4 * BITSIZE) - 1 : 3 *BITSIZE]
+        for(ii = 0; ii < N_CACHELINE_LENGTH; ii = ii + 1) begin
+            cache_line[addr_i[$clog2(N_CACHELINE_LENGTH)- 1 : 0] + ii] = data_i[((ii + 1) * BITSIZE) - 1 : ii* BITSIZE]
+        end
     end
 end
 

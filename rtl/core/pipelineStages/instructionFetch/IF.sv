@@ -12,62 +12,55 @@ module IF
 )(
     input                                       clk,
     input                                       resetn_i,
-    //TODO Memory interface
-
+    //IF-ID
     input                                       ID_IF_get_i,
     output                                      IF_ID_give_o,
-    output  [31 : 0]                            IF_ID_instr_o
+    output  [31 : 0]                            IF_ID_instr_o,
+    //IF-MEM (TODO: cache)
+    output  [BITSIZE - 1 : 0]                   MEM_addr_o,
+    input [31 : 0]                              MEM_data_i,
+    output                                      MEM_read_o,
+    input                                       MEM_valid_i
+    //TODO Branching address (+ flush of pipeline)
 );
 
 enum {FETCH_INSTR, PROVIDE_INSTR} CS, NS;
 
 logic [31 : 0]                                  IF_instruction;
-
-//TODO Temporary MEM IFACE
-logic [31:0]                instructions [8];
-logic [1 : 0]               j = 'b0;
-logic [2 : 0]               i = 'b0;
-assign instructions[0] = 32'b01111100011111111110001010110111; //LUI 
-assign instructions[1] = 32'b00000000000100011000000110010011; //ADDI
-assign instructions[2] = 32'b11111100011111111110001010110111; //LUI 
-assign instructions[3] = 32'b00000000000100011000000110010011; //ADDI
-assign instructions[4] = 32'b01111100011111111110001010110111; //LUI
-assign instructions[5] = 32'b00000000000100011000000110010011; //ADDI
-assign instructions[6] = 32'b11111100011111111110001010110111; //LUI
-assign instructions[7] = 32'b00000000000100011000000110010011; //ADDI
+logic [BITSIZE - 1 : 0]                         address = '0;
+logic                                           incr_addr;
 
 always_ff@(posedge clk)
 begin
     if(!resetn_i)
     begin
        CS <= FETCH_INSTR;
-       i <= 'b0;
-       j <= 'b0; 
     end
     else
     begin
         CS <= NS;
-        j <= j + 1'b1;
-        if(j == 2'b10)
-        begin
-            i <= i + 1'b1;
-            j <= 2'b00;
-        end
+        // TODO: branch
+        if(incr_addr)
+            address <= address + 1;
     end
 end
 
 always_comb
 begin
     IF_ID_give_o = 1'b0;
+    MEM_read_o = 1'b0;
+    incr_addr = 1'b0;
 
     case(CS)
         FETCH_INSTR: begin
-            //Memory interface
-            if(j == 2'b10)
-            begin
-                IF_instruction = instructions[i];
+            MEM_addr_o = address;
+            MEM_read_o = 1'b1;
+            if(MEM_valid_i)begin
+                IF_instruction = MEM_data_i;
                 NS = PROVIDE_INSTR;
+                incr_addr = 1'b1;
             end
+            
         end
 
         PROVIDE_INSTR: begin

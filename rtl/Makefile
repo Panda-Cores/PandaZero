@@ -40,9 +40,11 @@ VERILATOR_FLAGS += --coverage
 # Add this trace to get a backtrace in gdb
 #VERILATOR_FLAGS += --gdbbt
 INCLDIRS = core
-INCLDIRS += $(wildcard core/*)
-INCLDIRS += $(wildcard core/*/*)
-INCL=$(foreach d, $(INCLDIRS), -I$d) 
+INCLDIRS += memory
+INCLD += $(INCLDIRS)
+INCLD += $(foreach d, $(INCLDIRS), $(wildcard $d/*))
+INCLD += $(foreach d, $(INCLDIRS), $(wildcard $d/*/*))
+INCL=$(foreach d, $(INCLD), -I$d) 
 
 
 ######################################################################
