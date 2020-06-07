@@ -8,8 +8,8 @@ Features so far:
 * Memory controller
 
 Upcoming features:
-* Instructions on arbitrary level
-* Actual Memory (currently a rough estimation)
+* Instructions on multiple widths
+* Actual Memory (currently a rough temporary implementation)
 * L1 Instruction and data cache
 * Pipeline hazard detection (probably mitigation via pipeline stall)
 
