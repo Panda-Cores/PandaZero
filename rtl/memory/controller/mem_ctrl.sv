@@ -20,15 +20,18 @@ module mem_ctrl
     input [N_ACCESSORS - 1 : 0]                 acc_store_i,
     input [N_ACCESSORS - 1 : 0]                 acc_load_i,
     /* verilator lint_off ALWCOMBORDER */
-    inout [(N_ACCESSORS * N_WORDS_PER_ADDR * BITSIZE) - 1:0]  acc_data_io,
+    /* verilator lint_off UNOPTFLAT */
+    input [(N_ACCESSORS * N_WORDS_PER_ADDR * BITSIZE) - 1:0]  acc_data_i,
+    output [(N_ACCESSORS * N_WORDS_PER_ADDR * BITSIZE) - 1:0]  acc_data_o,
+    /* verilator lint_on UNOPTFLAT */
     /* verilator lint_on ALWCOMBORDER */
-    output [N_ACCESSORS - 1 : 0]                acc_ready_o,
     output [N_ACCESSORS - 1 : 0]                acc_done_o,
     //Memory
     output [31 : 0]                             mem_addr_o,
     /* verilator lint_off ALWCOMBORDER */
     /* verilator lint_off UNOPTFLAT */
-    inout [(N_WORDS_PER_ADDR * BITSIZE) - 1:0]  mem_data_io,
+    input [(N_WORDS_PER_ADDR * BITSIZE) - 1:0]  mem_data_i,
+    output [(N_WORDS_PER_ADDR * BITSIZE) - 1:0] mem_data_o,
     /* verilator lint_on ALWCOMBORDER */
     /* verilator lint_on UNOPTFLAT */
     output                                      mem_store_o,
@@ -48,10 +51,13 @@ logic [(N_WORDS_PER_ADDR * BITSIZE) - 1:0]  write_data;
     /* verilator lint_on UNOPTFLAT */
 logic                                       mem_write_enable;
 
-assign mem_data_io = (mem_write_enable) ? write_data : 'bz;
+// MEMCTRL->MEM
+assign mem_data_o = write_data;
+
+//MEMCTRL -> ACCESSOR
 genvar ii;
 for(ii = 0; ii < N_ACCESSORS; ii = ii + 1) begin
-    assign acc_data_io[((ii+1) * N_WORDS_PER_ADDR * BITSIZE) - 1 : (ii * N_WORDS_PER_ADDR * BITSIZE)] = (acc_load_i[ii]) ? write_data : 'bz;
+    assign acc_data_o[((ii+1) * N_WORDS_PER_ADDR * BITSIZE) - 1 : (ii * N_WORDS_PER_ADDR * BITSIZE)] = write_data;
 end
 
 always_ff@(posedge clk)
@@ -77,28 +83,23 @@ begin
 
     case(CS)
         IDLE: begin
-            acc_ready_o = 'b1;
             // Prefer store over load
             if(acc_store_i != '0)
             begin
                 // Priority: First is highest
                 for(i = N_ACCESSORS - 1; i >= 0; i = i - 1) begin
                     if(acc_store_i[i] == 'b1) begin
-                        acc_ready_o = 'b0;
-                        acc_ready_o[i] = 'b1;
                         accessor = i;
                         NS = STORE;
                     end
                 end
             end
             else
-            if({>>{acc_load_i}} != '0)
+            if(acc_load_i != '0)
             begin
                 // Priority: First is highest
                 for(i = N_ACCESSORS - 1; i >= 0; i = i - 1) begin
                     if(acc_load_i[i] == 'b1) begin
-                        acc_ready_o = 'b0;
-                        acc_ready_o[i] = 'b1;
                         accessor = i;
                         NS = LOAD;
                     end
@@ -108,11 +109,16 @@ begin
 
         LOAD: begin
             mem_valid_o = 1'b1;
-            mem_addr_o = acc_address_i[((ii+1) * BITSIZE) - 1 : (ii * BITSIZE)];
+
+            if(accessor == ii)
+            begin
+                mem_addr_o = acc_address_i[((ii+1) * BITSIZE) - 1 : (ii * BITSIZE)];
+                write_data = mem_data_i;
+            end
             if(mem_valid_i)
             begin
-                write_data = mem_data_io;
                 acc_done_o[accessor] = 1'b1;
+                NS = IDLE;
             end
             if(!acc_load_i[accessor])
             begin
@@ -124,12 +130,15 @@ begin
             mem_write_enable = 1'b1;
             mem_valid_o = 1'b1;
             mem_store_o = 1'b1;
-            mem_addr_o = acc_address_i[((ii+1) * BITSIZE) - 1 : (ii * BITSIZE)];
-                if(accessor == ii)
-                    write_data = acc_data_io[((ii+1) * N_WORDS_PER_ADDR * BITSIZE) - 1 : (ii * N_WORDS_PER_ADDR * BITSIZE)];
+            if(accessor == ii)
+            begin
+                mem_addr_o = acc_address_i[((ii+1) * BITSIZE) - 1 : (ii * BITSIZE)];
+                write_data = acc_data_i[((ii+1) * N_WORDS_PER_ADDR * BITSIZE) - 1 : (ii * N_WORDS_PER_ADDR * BITSIZE)]; 
+            end
             if(mem_valid_i)
             begin
                 acc_done_o[accessor] = 1'b1;
+                NS = IDLE;
             end
             if(!acc_load_i[accessor])
             begin

@@ -121,6 +121,7 @@ begin
 
                 `STORE: begin
                     ID_REG_rs1_o    = ID_instruction[19:15];
+                    ID_REG_rs2_o    = ID_instruction[24:20];
                     immediate[11:0] = {ID_instruction[31:25], ID_instruction[11:7]};
                     imm_extend      = 1'b1;
                 end

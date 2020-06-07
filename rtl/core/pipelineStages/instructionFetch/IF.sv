@@ -55,7 +55,7 @@ begin
         FETCH_INSTR: begin
             MEM_addr_o = address;
             MEM_read_o = 1'b1;
-            if(MEM_valid_i)begin
+            if(MEM_valid_i) begin
                 IF_instruction = MEM_data_i;
                 NS = PROVIDE_INSTR;
                 incr_addr = 1'b1;

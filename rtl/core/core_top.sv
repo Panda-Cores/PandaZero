@@ -13,16 +13,27 @@ module core_top
     input                           clk,
     input                           resetn_i,
     //IF-MEM (TODO: caches)
-    output [BITSIZE - 1 : 0]        MEM_addr_o,
-    input  [BITSIZE - 1 : 0]        MEM_data_i,
-    output                          MEM_read_o,
-    input                           MEM_valid_i
+    output [(2 * BITSIZE) - 1 : 0]  MEM_addr_o,
+    inout  [(2 * BITSIZE) - 1 : 0]  MEM_data_i,
+    inout  [(2 * BITSIZE) - 1 : 0]  MEM_data_o,
+    output [1 : 0]                  MEM_read_o,
+    output [1 : 0]                  MEM_write_o,
+    input  [1 : 0]                  MEM_valid_i
 );
 
-assign MEM_read_o = IF_MEM_read;
-assign MEM_addr_o = IF_MEM_addr;
-assign IF_MEM_data =  MEM_data_i;
-assign IF_MEM_valid = MEM_valid_i;
+assign MEM_write_o[0]               = MEM_MEM_write;
+assign MEM_read_o[0]                = MEM_MEM_read;
+assign MEM_addr_o[BITSIZE - 1 : 0]  = MEM_MEM_addr;
+assign MEM_MEM_data_i               = MEM_data_i[BITSIZE - 1 : 0];
+assign MEM_data_o[BITSIZE - 1 : 0]  = MEM_MEM_data_o;
+assign MEM_MEM_valid                = MEM_valid_i[0];
+
+assign MEM_write_o[1]               = 1'b0;
+assign IF_MEM_data_i                = MEM_data_i[(2 * BITSIZE) - 1 : BITSIZE];
+assign MEM_data_o[(2 * BITSIZE) - 1 : BITSIZE] = 'b0;
+assign MEM_addr_o[(2 * BITSIZE) - 1 : BITSIZE] = IF_MEM_addr;
+assign MEM_read_o[1]                = IF_MEM_read;
+assign IF_MEM_valid                 = MEM_valid_i[1];
 
 logic                           resetn;
 
@@ -33,7 +44,7 @@ logic [31 : 0]                  IF_ID_instr;
 
 //IF-MEM
 logic [BITSIZE - 1: 0]          IF_MEM_addr;
-logic [31 : 0]                  IF_MEM_data;
+logic [31 : 0]                  IF_MEM_data_i;
 logic                           IF_MEM_read;
 logic                           IF_MEM_valid;
 
@@ -53,11 +64,28 @@ logic [BITSIZE - 1 : 0]         REG_ID_rs2_d;
 logic                           inv_instr;
 
 
-//EX-WB
-logic                           EX_WB_give;
-logic                           WB_EX_get;
-logic [31 : 0]                  EX_WB_instr;
-logic [BITSIZE - 1 : 0]         EX_WB_d;
+//EX-MEM
+logic                           EX_MEM_give;
+logic                           MEM_EX_get;
+logic [31 : 0]                  EX_MEM_instr;
+logic [BITSIZE - 1 : 0]         EX_MEM_result;
+logic [BITSIZE - 1 : 0]         EX_MEM_rs2;
+
+//MEM
+logic                           MEM_MEM_write;
+/* verilator lint_off UNOPTFLAT */
+logic                           MEM_MEM_read;
+/* verilator lint_off UNOPTFLAT */
+logic                           MEM_MEM_valid;
+logic [BITSIZE - 1 : 0]         MEM_MEM_addr;
+logic [BITSIZE - 1 : 0]         MEM_MEM_data_i;
+logic [BITSIZE - 1 : 0]         MEM_MEM_data_o;
+
+//MEM-WB
+logic                           MEM_WB_give;
+logic                           WB_MEM_get;
+logic [31 : 0]                  MEM_WB_instr;
+logic [BITSIZE - 1 : 0]         MEM_WB_data;
 
 //WB
 logic [4 : 0]                   WB_REG_rd;
@@ -105,7 +133,7 @@ IF #(
     .IF_ID_instr_o  (   IF_ID_instr ),
     //TODO: Cache
     .MEM_addr_o     (   IF_MEM_addr ),
-    .MEM_data_i     (   IF_MEM_data ),
+    .MEM_data_i     (   IF_MEM_data_i),
     .MEM_read_o     (   IF_MEM_read ),
     .MEM_valid_i    (   IF_MEM_valid)
 );
@@ -143,23 +171,44 @@ EX #(
     .ID_EX_rs1_i        (   ID_EX_rs1   ),
     .ID_EX_rs2_i        (   ID_EX_rs2   ),
     .ID_EX_imm_i        (   ID_EX_imm   ),
-    .WB_EX_get_i        (   WB_EX_get   ),
-    .EX_WB_give_o       (   EX_WB_give  ),
-    .EX_WB_instruction_o(   EX_WB_instr ),
-    .EX_WB_d_o          (   EX_WB_d     )
+    .MEM_EX_get_i       (   MEM_EX_get  ),
+    .EX_MEM_give_o      (   EX_MEM_give ),
+    .EX_MEM_instruction_o(  EX_MEM_instr),
+    .EX_MEM_result_o    (   EX_MEM_result),
+    .EX_MEM_rs2_o       (   EX_MEM_rs2  )
 );
 
-//TODO: MEM stage
+MEM #(
+    .BITSIZE            (   BITSIZE     )
+) MEM_i (
+    .clk                (   clk         ),
+    .resetn_i           (   resetn      ),
+    .EX_MEM_give_i      (   EX_MEM_give ),
+    .MEM_EX_get_o       (   MEM_EX_get  ),
+    .EX_MEM_instr_i     (   EX_MEM_instr),
+    .EX_MEM_result_i    (   EX_MEM_result),
+    .EX_MEM_rs2_i       (   EX_MEM_rs2  ),
+    .MEM_addr_o         (   MEM_MEM_addr),
+    .MEM_data_i         (   MEM_MEM_data_i),
+    .MEM_data_o         (   MEM_MEM_data_o),
+    .MEM_write_o        (   MEM_MEM_write),
+    .MEM_read_o         (   MEM_MEM_read ),
+    .MEM_valid_i        (   MEM_MEM_valid),
+    .WB_MEM_get_i       (   WB_MEM_get  ),
+    .MEM_WB_give_o      (   MEM_WB_give ),
+    .MEM_WB_instr_o     (   MEM_WB_instr),
+    .MEM_WB_data_o      (   MEM_WB_data )
+);
 
 WB #(
     .BITSIZE            (   BITSIZE     )
 ) WB_i (
     .clk                (   clk         ),
     .resetn_i           (   resetn      ),
-    .WB_EX_get_o        (   WB_EX_get   ),
-    .EX_WB_give_i       (   EX_WB_give  ),
-    .EX_WB_instruction_i(   EX_WB_instr ),
-    .EX_WB_d_i          (   EX_WB_d     ),
+    .WB_MEM_get_o       (   WB_MEM_get  ),
+    .MEM_WB_give_i      (   MEM_WB_give ),
+    .MEM_WB_instruction_i(  MEM_WB_instr),
+    .MEM_WB_data_i      (   MEM_WB_data ),
     .WB_REG_rd_o        (   WB_REG_rd   ),
     .WB_REG_d_o         (   WB_REG_d    ),
     .WB_REG_access_o    (   REG_mux     )

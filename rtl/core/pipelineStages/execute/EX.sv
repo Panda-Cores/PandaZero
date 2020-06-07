@@ -22,11 +22,12 @@ module EX
     input [BITSIZE - 1 : 0]                     ID_EX_rs1_i,
     input [BITSIZE - 1 : 0]                     ID_EX_rs2_i,
     input [BITSIZE - 1 : 0]                     ID_EX_imm_i,
-    //EX-WB
-    input                                       WB_EX_get_i,
-    output                                      EX_WB_give_o,
-    output [31 : 0]                             EX_WB_instruction_o,
-    output [BITSIZE - 1 : 0]                    EX_WB_d_o
+    //EX-MEM
+    input                                       MEM_EX_get_i,
+    output                                      EX_MEM_give_o,
+    output [31 : 0]                             EX_MEM_instruction_o,
+    output [BITSIZE - 1 : 0]                    EX_MEM_result_o,
+    output [BITSIZE - 1 : 0]                    EX_MEM_rs2_o
 );
 
 enum {GET_INSTR, EXECUTE_INSTR} CS, NS;
@@ -46,9 +47,7 @@ logic                                           alu_overflow;
 logic                                           alu_d1_mux;
 
 logic [BITSIZE - 1 : 0]                         EX_result;
-logic [BITSIZE - 1 : 0]                         WB_d;
 
-assign WB_d = EX_result;
 assign ALU_d0 = EX_d0;
 assign ALU_d1 = (alu_d1_mux) ? EX_imm : EX_d1;
 
@@ -67,7 +66,7 @@ end
 always_comb
 begin
     EX_ID_get_o     = 1'b0;
-    EX_WB_give_o    = 1'b0;
+    EX_MEM_give_o    = 1'b0;
     alu_d1_mux      = 1'b0;
 
     case(CS)
@@ -86,8 +85,8 @@ begin
         EXECUTE_INSTR: begin
             case(EX_instruction[6:0])
                 `LUI: begin
-                    alu_operation = `ADDITION;
-                    EX_result = alu_result;
+                    alu_operation   = `ADDITION;
+                    EX_result       = alu_result;
                     alu_d1_mux      = 1'b1;
                 end
 
@@ -96,33 +95,37 @@ begin
                         alu_operation = {EX_instruction[30], EX_instruction[14:12]};
                     else
                         alu_operation = {1'b0, EX_instruction[14:12]};
-                    EX_result = alu_result;
+                    EX_result       = alu_result;
                     alu_d1_mux      = 1'b1;
                 end
 
                 `REG_REG_ALU: begin
                     alu_operation = {EX_instruction[30], EX_instruction[14:12]};
+                    EX_result       = alu_result;
                 end
 
                 `LOAD: begin
-                    alu_operation = `ADDITION;
+                    alu_operation   = `ADDITION;
                     alu_d1_mux      = 1'b1;
+                    EX_result       = alu_result;
                 end
 
                 `STORE: begin
-                    alu_operation = `ADDITION;
+                    alu_operation   = `ADDITION;
                     alu_d1_mux      = 1'b1;
+                    EX_result       = alu_result;
                 end
                 default: begin
                 end
             endcase
             // Replace with MEM
-            if(WB_EX_get_i)
+            if(MEM_EX_get_i)
             begin
-                EX_WB_give_o        = 1'b1;
-                EX_WB_instruction_o = EX_instruction;
-                EX_WB_d_o           = WB_d;
-                NS                  = GET_INSTR;
+                EX_MEM_give_o        = 1'b1;
+                EX_MEM_instruction_o = EX_instruction;
+                EX_MEM_result_o      = EX_result;
+                EX_MEM_rs2_o         = EX_d1;
+                NS                   = GET_INSTR;
             end
         end
 
