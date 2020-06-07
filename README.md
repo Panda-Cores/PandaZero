@@ -1,4 +1,4 @@
-# RVMicroCotroller
+# RVMicroController
 My very own RISC-V computer, which will maybe someday run as a microcontroller!
 
 Features so far:
