@@ -18,10 +18,12 @@ module core_top
     inout  [(2 * BITSIZE) - 1 : 0]  MEM_data_o,
     output [1 : 0]                  MEM_read_o,
     output [1 : 0]                  MEM_write_o,
+    output [3 : 0]                  MEM_write_size_o,
     input  [1 : 0]                  MEM_valid_i
 );
 
 assign MEM_write_o[0]               = MEM_MEM_write;
+assign MEM_write_size_o[1:0]        = MEM_MEM_write_size;
 assign MEM_read_o[0]                = MEM_MEM_read;
 assign MEM_addr_o[BITSIZE - 1 : 0]  = MEM_MEM_addr;
 assign MEM_MEM_data_i               = MEM_data_i[BITSIZE - 1 : 0];
@@ -29,6 +31,7 @@ assign MEM_data_o[BITSIZE - 1 : 0]  = MEM_MEM_data_o;
 assign MEM_MEM_valid                = MEM_valid_i[0];
 
 assign MEM_write_o[1]               = 1'b0;
+assign MEM_write_size_o[3:2]        = 2'b0;
 assign IF_MEM_data_i                = MEM_data_i[(2 * BITSIZE) - 1 : BITSIZE];
 assign MEM_data_o[(2 * BITSIZE) - 1 : BITSIZE] = 'b0;
 assign MEM_addr_o[(2 * BITSIZE) - 1 : BITSIZE] = IF_MEM_addr;
@@ -73,6 +76,7 @@ logic [BITSIZE - 1 : 0]         EX_MEM_rs2;
 
 //MEM
 logic                           MEM_MEM_write;
+logic [1 : 0]                   MEM_MEM_write_size;
 /* verilator lint_off UNOPTFLAT */
 logic                           MEM_MEM_read;
 /* verilator lint_off UNOPTFLAT */
@@ -192,6 +196,7 @@ MEM #(
     .MEM_data_i         (   MEM_MEM_data_i),
     .MEM_data_o         (   MEM_MEM_data_o),
     .MEM_write_o        (   MEM_MEM_write),
+    .MEM_write_size_o(MEM_MEM_write_size),
     .MEM_read_o         (   MEM_MEM_read ),
     .MEM_valid_i        (   MEM_MEM_valid),
     .WB_MEM_get_i       (   WB_MEM_get  ),

@@ -26,6 +26,7 @@ module MEM#(
     output                              MEM_read_o,
     input                               MEM_valid_i,
     output                              MEM_write_o,
+    output [1:0]                        MEM_write_size_o,
     //MEM-WB
     input                               WB_MEM_get_i,
     output                              MEM_WB_give_o,
@@ -38,13 +39,14 @@ enum {GET_INSTR, MEM, PROVIDE_DATA} CS, NS;
 logic                                   MEM_write;
 logic [BITSIZE - 1 : 0]                 MEM_d;
 /* verilator lint_on UNOPTFLAT */
-logic [BITSIZE - 1 : 0]                 MEM_rs2;
 logic [BITSIZE - 1 : 0]                 MEM_addr;
 logic [31 : 0]                          MEM_instr;
 
-assign MEM_write_o = MEM_write;
+logic                                   extend;
 
-assign MEM_data_o = MEM_rs2;
+assign MEM_write_o = MEM_write;
+assign MEM_write_size_o = MEM_instr[13:12];
+assign MEM_data_o = MEM_d;
 
 always_ff@(posedge clk)
 begin
@@ -55,6 +57,21 @@ begin
     begin
         CS <= NS;
     end
+end
+
+always_comb
+begin
+    if(MEM_instr[6:0] == `LOAD || MEM_instr[6:0] == `STORE)
+    case(MEM_instr[13:12])
+        2'b00: begin
+                MEM_d[BITSIZE - 1 : 8] = (MEM_instr[14]) ? 0 : {BITSIZE - 8 {MEM_d[7]}};
+        end
+        2'b01: begin
+                MEM_d[BITSIZE - 1 : 16] = (MEM_instr[14]) ? 0 : {BITSIZE - 16 {MEM_d[15]}};
+        end
+        default: begin
+        end
+    endcase
 end
 
 always_comb
@@ -70,13 +87,11 @@ begin
             if(EX_MEM_give_i) begin
                 MEM_instr   = EX_MEM_instr_i;
                 MEM_addr    = EX_MEM_result_i;
-                MEM_rs2     = EX_MEM_rs2_i;
-                if(EX_MEM_instr_i[6:0] == `LOAD || EX_MEM_instr_i[6:0] == `STORE)
-                begin
+                if(EX_MEM_instr_i[6:0] == `LOAD || EX_MEM_instr_i[6:0] == `STORE) begin
                     NS = MEM;
+                    MEM_d = EX_MEM_rs2_i;
                 end
-                else
-                begin
+                else begin
                     NS = PROVIDE_DATA;
                     MEM_d = EX_MEM_result_i;                  
                 end

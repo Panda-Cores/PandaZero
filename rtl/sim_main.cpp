@@ -27,7 +27,7 @@ int main(int argc, char** argv, char** env) {
         top->clk = !top->clk;
     }
     top->resetn_i = 1;
-    for(clk; clk < 200; clk++){
+    for(clk; clk < 10000; clk++){
         top->eval();
         tfp->dump(clk);
         top->clk = !top->clk;

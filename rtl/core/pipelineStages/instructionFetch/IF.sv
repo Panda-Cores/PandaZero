@@ -41,7 +41,7 @@ begin
         CS <= NS;
         // TODO: branch
         if(incr_addr)
-            address <= address + 1;
+            address <= address + 4;
     end
 end
 
