@@ -19,10 +19,12 @@ module ID
     input                                       IF_ID_give_i,
     output                                      ID_IF_get_o,
     input [31 : 0]                              IF_ID_instr_i,
+    input [BITSIZE - 1 : 0]                     IF_ID_pc_i,
     //ID-EX
     input                                       EX_ID_get_i,
     output                                      ID_EX_give_o,
     output [31 : 0]                             ID_EX_instruction_o,
+    output [BITSIZE - 1 : 0]                    ID_EX_pc_o,
     output [BITSIZE - 1 : 0]                    ID_EX_rs1_o,
     output [BITSIZE - 1 : 0]                    ID_EX_rs2_o,
     output [BITSIZE - 1 : 0]                    ID_EX_imm_o,
@@ -37,6 +39,7 @@ module ID
 enum {GET_INSTR, DECODE_INSTR} CS, NS;
 
 logic [31 : 0]                                  ID_instruction;
+logic [BITSIZE - 1 : 0]                         ID_pc;
 
 logic [BITSIZE - 1 : 0]                         ID_EX_rs1_d;
 logic [BITSIZE - 1 : 0]                         ID_EX_rs2_d;
@@ -51,14 +54,7 @@ logic                                           inv_instr;
 
 always_ff@(posedge clk)
 begin
-    if(!resetn_i)
-    begin
-        CS <= GET_INSTR;
-    end
-    else
-    begin
-        CS <= NS;
-    end
+    CS <= NS;
 end
 
 //Invalid instruction
@@ -67,12 +63,17 @@ assign inv_instr_o = inv_instr;
 // Provide registers/immediate to EX
 assign ID_EX_rs1_d = REG_ID_rs1_d_i;
 assign ID_EX_rs2_d = REG_ID_rs2_d_i;
-assign ID_EX_imm_o = immediate;
 
 always_comb
 begin
     if(imm_extend)
-        immediate[31:12] = (ID_instruction[31]) ? 20'b1 : 20'b0;
+    begin
+        ID_EX_imm_o[11:0] = immediate[11:0];
+        ID_EX_imm_o[31:12] = (ID_instruction[31]) ? 20'1 : 20'b0;
+    end
+    else
+        ID_EX_imm_o = immediate;
+
 end
 
 always_comb
@@ -82,15 +83,21 @@ begin
     ID_REG_rs1_o    = 'b0;
     ID_REG_rs2_o    = 'b0;
     imm_extend      = 1'b0;
-    if(resetn_i)
-        inv_instr   = 1'b0;
 
+    if(!resetn_i)
+    begin
+        inv_instr   = 1'b0;
+        NS = GET_INSTR;
+        ID_instruction = '0;
+    end
+    else
     case(CS)
         GET_INSTR: begin
             ID_IF_get_o = 1'b1;
             if(IF_ID_give_i)
             begin
                 ID_instruction = IF_ID_instr_i;
+                ID_pc = IF_ID_pc_i;
                 NS = DECODE_INSTR;
             end
         end
@@ -109,8 +116,8 @@ begin
                 end
 
                 `REG_REG_ALU: begin
-                    ID_REG_rs1_o= ID_instruction[19:15];
-                    ID_REG_rs2_o= ID_instruction[24:20];                    
+                    ID_REG_rs1_o    = ID_instruction[19:15];
+                    ID_REG_rs2_o    = ID_instruction[24:20];                    
                 end
 
                 `LOAD: begin
@@ -126,6 +133,13 @@ begin
                     imm_extend      = 1'b1;
                 end
 
+                `BRANCH: begin
+                    ID_REG_rs1_o    = ID_instruction[19:15];
+                    ID_REG_rs2_o    = ID_instruction[24:20];
+                    immediate[12:0] = {ID_instruction[31], ID_instruction[7], ID_instruction[30 : 25], ID_instruction[11:8], 1'b0};
+                    imm_extend      = 1'b1;
+                end
+
                 default: begin
                     inv_instr = 1'b1;
                 end
@@ -137,6 +151,7 @@ begin
                 // ID_rd_last          = ID_EX_rd;
                 ID_EX_give_o        = 1'b1;
                 ID_EX_instruction_o = ID_instruction;
+                ID_EX_pc_o          = ID_pc - 4;
                 ID_EX_rs1_o         = ID_EX_rs1_d;
                 ID_EX_rs2_o         = ID_EX_rs2_d;
                 NS                  = GET_INSTR;

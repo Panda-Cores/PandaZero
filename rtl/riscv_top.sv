@@ -33,7 +33,7 @@ core_top #(
 
 mem_ctrl_top #(
     .BITSIZE            (   BITSIZE     ),
-    .MEM_SIZE           (   16           ),
+    .MEM_SIZE           (   32           ),
     .N_ACCESSORS        (   2           )
 ) mem_ctrl_top_i (
     .clk                (   clk             ),

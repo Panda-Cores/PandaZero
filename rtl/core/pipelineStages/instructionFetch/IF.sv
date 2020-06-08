@@ -16,33 +16,40 @@ module IF
     input                                       ID_IF_get_i,
     output                                      IF_ID_give_o,
     output  [31 : 0]                            IF_ID_instr_o,
+    output  [BITSIZE - 1 : 0]                   IF_ID_pc_o,
     //IF-MEM (TODO: cache)
     output  [BITSIZE - 1 : 0]                   MEM_addr_o,
     input [31 : 0]                              MEM_data_i,
     output                                      MEM_read_o,
-    input                                       MEM_valid_i
-    //TODO Branching address (+ flush of pipeline)
+    input                                       MEM_valid_i,
+    //Branching
+    input [BITSIZE - 1 : 0]                     pc_i,
+    input                                       branch_taken_i
 );
 
 enum {FETCH_INSTR, PROVIDE_INSTR} CS, NS;
 
 logic [31 : 0]                                  IF_instruction;
-logic [BITSIZE - 1 : 0]                         address = '0;
+logic [BITSIZE - 1 : 0]                         IF_pc = '0;
 logic                                           incr_addr;
 
 always_ff@(posedge clk)
 begin
-    if(!resetn_i)
+    if(!resetn_i || branch_taken_i)
     begin
-       CS <= FETCH_INSTR;
+        CS <= FETCH_INSTR;
+        IF_pc <= pc_i;
     end
     else
     begin
         CS <= NS;
-        // TODO: branch
         if(incr_addr)
-            address <= address + 4;
+            IF_pc <= IF_pc + 4;
     end
+end
+
+always_comb
+begin
 end
 
 always_comb
@@ -50,17 +57,23 @@ begin
     IF_ID_give_o = 1'b0;
     MEM_read_o = 1'b0;
     incr_addr = 1'b0;
+    MEM_addr_o = IF_pc;
 
+    if(!resetn_i || branch_taken_i)
+    begin
+        NS = FETCH_INSTR;
+        IF_instruction = 'b0;
+    end
+    else
     case(CS)
         FETCH_INSTR: begin
-            MEM_addr_o = address;
             MEM_read_o = 1'b1;
             if(MEM_valid_i) begin
                 IF_instruction = MEM_data_i;
                 NS = PROVIDE_INSTR;
                 incr_addr = 1'b1;
             end
-            
+                        
         end
 
         PROVIDE_INSTR: begin
@@ -68,6 +81,7 @@ begin
             begin
                 IF_ID_give_o = 1'b1;
                 IF_ID_instr_o = IF_instruction;
+                IF_ID_pc_o = IF_pc;
                 NS = FETCH_INSTR;
             end
         end

@@ -26,28 +26,29 @@ module alu
     assign R_o = result[BITSIZE - 1 : 0];
     assign overflow_o = overflow;
 
+    
+
     always_comb
     case(operation_i)
         `ADDITION :
-            {overflow, result} = A_i + B_i;
+            {overflow, result} = $signed(A_i) + $signed(B_i);
         `SUBTRACTION :
             {overflow, result} = A_i - B_i;
         `SHIFT_LEFT :
-            result = A_i << 1;
-        `SHIFT_RIGHT :
-            result = A_i >> 1;
-        // `ROTATE_LEFT:
-        //     result = {A_i[BITSIZE - 2: 0], A_i[BITSIZE - 1]};
-        // `ROTATE_RIGHT:
-        //     result = {A_i[0], A_i[BITSIZE - 1 : 1]};
+            result = A_i << B_i;
+        `LSHIFT_RIGHT :
+            result = A_i >> B_i;
+        `ASHIFT_RIGHT :begin
+            result = $signed(A_i) >>> B_i;
+        end
         `AND :
             result = A_i & B_i;
         `OR :
             result = A_i | B_i;
         `XOR :
             result = A_i ^ B_i;
-        `LT :
-            result = (A_i < B_i)?'d1:'d0;
+        `SLT, `SLTU :
+            result = (A_i < B_i) ? 'b1 : 'b0;
         default :
             result = 'b0;
     endcase;

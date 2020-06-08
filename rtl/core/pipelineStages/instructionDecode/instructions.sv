@@ -7,3 +7,5 @@
 `define LOAD        7'b0000011
 
 `define STORE       7'b0100011
+
+`define BRANCH      7'b1100011

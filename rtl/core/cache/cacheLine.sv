@@ -14,7 +14,7 @@ module cacheLine
 
 )(
     input [BITSIZE - 1: 0]                  addr_i,
-    input [(BITSIZE * N_CACHELINE_LENGTH) - 1 : 0]  data_i,
+    input [(BITSIZE * N_CACHELINE_LENGTH) : 0]  data_i,
     input                                   store_i,
     output                                  hit_o,
     output [BITSIZE - 1: 0]                 data_o
@@ -22,7 +22,7 @@ module cacheLine
 
 logic [TAGSIZE - 1 : 0]     tag;
 
-logic [BITSIZE - 1 : 0]     cache_line [N_CACHELINE_LENGTH]
+logic [BITSIZE : 0]     cache_line [N_CACHELINE_LENGTH]
 
 logic                       incr_offset;
 

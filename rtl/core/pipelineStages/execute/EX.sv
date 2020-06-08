@@ -19,6 +19,7 @@ module EX
     input                                       ID_EX_give_i,
     output                                      EX_ID_get_o,
     input [31 : 0]                              ID_EX_instruction_i,
+    input [BITSIZE - 1 : 0]                     ID_EX_pc_i,
     input [BITSIZE - 1 : 0]                     ID_EX_rs1_i,
     input [BITSIZE - 1 : 0]                     ID_EX_rs2_i,
     input [BITSIZE - 1 : 0]                     ID_EX_imm_i,
@@ -27,12 +28,14 @@ module EX
     output                                      EX_MEM_give_o,
     output [31 : 0]                             EX_MEM_instruction_o,
     output [BITSIZE - 1 : 0]                    EX_MEM_result_o,
-    output [BITSIZE - 1 : 0]                    EX_MEM_rs2_o
+    output [BITSIZE - 1 : 0]                    EX_MEM_rs2_o,
+    output                                      branch_taken_o
 );
 
 enum {GET_INSTR, EXECUTE_INSTR} CS, NS;
 
 logic [31 : 0]                                  EX_instruction;
+logic [BITSIZE - 1 : 0]                         EX_pc;
 
 logic [BITSIZE - 1 : 0]                         EX_d0;
 logic [BITSIZE - 1 : 0]                         EX_d1;
@@ -45,30 +48,33 @@ logic [3 : 0]                                   alu_operation;
 logic [BITSIZE - 1 : 0]                         alu_result;
 logic                                           alu_overflow;
 logic                                           alu_d1_mux;
+logic                                           alu_d0_mux;
+logic                                           branch_taken;
 
 logic [BITSIZE - 1 : 0]                         EX_result;
 
-assign ALU_d0 = EX_d0;
+assign ALU_d0 = (alu_d0_mux) ? EX_pc : EX_d0;
 assign ALU_d1 = (alu_d1_mux) ? EX_imm : EX_d1;
 
 always_ff@(posedge clk)
 begin
-    if(!resetn_i)
-    begin
-        CS <= GET_INSTR;
-    end
-    else
-    begin
-        CS <= NS;        
-    end
+    CS <= NS;
+    branch_taken_o <= branch_taken;
 end
 
 always_comb
 begin
     EX_ID_get_o     = 1'b0;
-    EX_MEM_give_o    = 1'b0;
+    EX_MEM_give_o   = 1'b0;
+    branch_taken    = 1'b0;
     alu_d1_mux      = 1'b0;
-
+    alu_d0_mux      = 1'b0;
+    if(!resetn_i)
+    begin
+        NS = GET_INSTR;
+        EX_instruction = '0;
+    end
+    else
     case(CS)
         GET_INSTR: begin
             EX_ID_get_o = 1'b1;
@@ -76,6 +82,7 @@ begin
             begin
                 EX_instruction  = ID_EX_instruction_i;
                 NS              = EXECUTE_INSTR;
+                EX_pc           = ID_EX_pc_i;
                 EX_d0           = ID_EX_rs1_i;
                 EX_d1           = ID_EX_rs2_i;
                 EX_imm          = ID_EX_imm_i;
@@ -115,6 +122,30 @@ begin
                     alu_d1_mux      = 1'b1;
                     EX_result       = alu_result;
                 end
+
+                `BRANCH:begin
+                    alu_operation   = `ADDITION;
+                    alu_d1_mux      = 1'b1;
+                    alu_d0_mux      = 1'b1;
+                    EX_result       = alu_result;
+                    case(EX_instruction[14:12])
+                        3'b000: // BEQ
+                            branch_taken = (EX_d0 == EX_d1) ? 1'b1 : 1'b0;
+                        3'b001: // BNE
+                            branch_taken = (EX_d0 != EX_d1) ? 1'b1 : 1'b0;
+                        3'b100: // BLT
+                            branch_taken = (EX_d0 < EX_d1) ? 1'b1 : 1'b0;
+                        3'b101: // BGE
+                            branch_taken = (EX_d0 >= EX_d1) ? 1'b1 : 1'b0;
+                        3'b110: // TODO: BLTU
+                            branch_taken = (EX_d0 < EX_d1) ? 1'b1 : 1'b0;
+                        3'b111: // TODO: BGEU
+                            branch_taken = (EX_d0 >= EX_d1) ? 1'b1 : 1'b0;
+                        default: begin
+                        end
+                    endcase
+                end
+
                 default: begin
                 end
             endcase

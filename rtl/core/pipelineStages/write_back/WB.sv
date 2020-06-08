@@ -66,6 +66,7 @@ begin
                 default:
                     WB_REG_rd_o = 'b0;
             endcase
+            
             WB_REG_d_o = WB_d;
             NS = GET_INSTR;
         end
