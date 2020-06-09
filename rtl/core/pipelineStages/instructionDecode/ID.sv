@@ -10,7 +10,7 @@
 
 module ID
 #(
-    parameter BITSIZE
+    parameter BITSIZE = 32
 )(
     input                                       clk,
     input                                       resetn_i,
@@ -41,8 +41,12 @@ enum {GET_INSTR, DECODE_INSTR} CS, NS;
 logic [31 : 0]                                  ID_instruction;
 logic [BITSIZE - 1 : 0]                         ID_pc;
 
+logic [4 : 0]                                   ID_REG_rs1;
+logic [4 : 0]                                   ID_REG_rs2;
+
 logic [BITSIZE - 1 : 0]                         ID_EX_rs1_d;
 logic [BITSIZE - 1 : 0]                         ID_EX_rs2_d;
+logic [BITSIZE - 1 : 0]                         ID_EX_imm;
 logic [BITSIZE - 1 : 0]                         immediate;
 
 logic [4 : 0]                                   rs1;
@@ -50,7 +54,13 @@ logic [4 : 0]                                   rs2;
 
 logic                                           imm_extend;
 logic                                           inv_instr;
+logic ID_IF_get, ID_EX_give;
 
+assign ID_REG_rs1_o = ID_REG_rs1;
+assign ID_REG_rs2_o = ID_REG_rs2;
+
+assign ID_EX_instruction_o = ID_instruction;
+assign ID_EX_pc_o          = ID_pc;
 
 always_ff@(posedge clk)
 begin
@@ -61,27 +71,27 @@ end
 assign inv_instr_o = inv_instr;
 
 // Provide registers/immediate to EX
-assign ID_EX_rs1_d = REG_ID_rs1_d_i;
-assign ID_EX_rs2_d = REG_ID_rs2_d_i;
+assign ID_EX_rs1_o = REG_ID_rs1_d_i;
+assign ID_EX_rs2_o = REG_ID_rs2_d_i;
+assign ID_EX_imm_o = ID_EX_imm;
+assign ID_IF_get_o = ID_IF_get;
+assign ID_EX_give_o = ID_EX_give;
 
 always_comb
 begin
     if(imm_extend)
     begin
-        ID_EX_imm_o[11:0] = immediate[11:0];
-        ID_EX_imm_o[31:12] = (ID_instruction[31]) ? 20'1 : 20'b0;
+        ID_EX_imm[31:0] = {{20{ID_instruction[31]}}, immediate[11:0]};
     end
     else
-        ID_EX_imm_o = immediate;
+        ID_EX_imm = immediate;
 
 end
 
 always_comb
 begin
-    ID_IF_get_o     = 1'b0;
-    ID_EX_give_o    = 1'b0;
-    ID_REG_rs1_o    = 'b0;
-    ID_REG_rs2_o    = 'b0;
+    ID_IF_get     = 1'b0;
+    ID_EX_give    = 1'b0;
     imm_extend      = 1'b0;
 
     if(!resetn_i)
@@ -93,7 +103,7 @@ begin
     else
     case(CS)
         GET_INSTR: begin
-            ID_IF_get_o = 1'b1;
+            ID_IF_get = 1'b1;
             if(IF_ID_give_i)
             begin
                 ID_instruction = IF_ID_instr_i;
@@ -110,32 +120,32 @@ begin
                 end
                 
                 `IMM_REG_ALU: begin
-                    ID_REG_rs1_o    = ID_instruction[19:15];
+                    ID_REG_rs1      = ID_instruction[19:15];
                     immediate[11:0] = ID_instruction[31:20];
                     imm_extend      = 1'b1;
                 end
 
                 `REG_REG_ALU: begin
-                    ID_REG_rs1_o    = ID_instruction[19:15];
-                    ID_REG_rs2_o    = ID_instruction[24:20];                    
+                    ID_REG_rs1    = ID_instruction[19:15];
+                    ID_REG_rs2    = ID_instruction[24:20];                    
                 end
 
                 `LOAD: begin
-                    ID_REG_rs1_o    = ID_instruction[19:15];
+                    ID_REG_rs1    = ID_instruction[19:15];
                     immediate[11:0] = ID_instruction[31:20];
                     imm_extend      = 1'b1;
                 end
 
                 `STORE: begin
-                    ID_REG_rs1_o    = ID_instruction[19:15];
-                    ID_REG_rs2_o    = ID_instruction[24:20];
+                    ID_REG_rs1    = ID_instruction[19:15];
+                    ID_REG_rs2    = ID_instruction[24:20];
                     immediate[11:0] = {ID_instruction[31:25], ID_instruction[11:7]};
                     imm_extend      = 1'b1;
                 end
 
                 `BRANCH: begin
-                    ID_REG_rs1_o    = ID_instruction[19:15];
-                    ID_REG_rs2_o    = ID_instruction[24:20];
+                    ID_REG_rs1    = ID_instruction[19:15];
+                    ID_REG_rs2    = ID_instruction[24:20];
                     immediate[12:0] = {ID_instruction[31], ID_instruction[7], ID_instruction[30 : 25], ID_instruction[11:8], 1'b0};
                     imm_extend      = 1'b1;
                 end
@@ -149,11 +159,11 @@ begin
             if(EX_ID_get_i && ID_REG_access_i)
             begin
                 // ID_rd_last          = ID_EX_rd;
-                ID_EX_give_o        = 1'b1;
-                ID_EX_instruction_o = ID_instruction;
-                ID_EX_pc_o          = ID_pc - 4;
-                ID_EX_rs1_o         = ID_EX_rs1_d;
-                ID_EX_rs2_o         = ID_EX_rs2_d;
+                ID_EX_give        = 1'b1;
+//                ID_EX_instruction_o = ID_instruction;
+//                ID_EX_pc_o          = ID_pc;
+//                ID_EX_rs1_o         = ID_EX_rs1_d;
+//                ID_EX_rs2_o         = ID_EX_rs2_d;
                 NS                  = GET_INSTR;
             end
         end

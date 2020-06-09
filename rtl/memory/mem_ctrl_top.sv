@@ -57,10 +57,10 @@ mem_ctrl#(
     .mem_valid_i        (   mem_valid_mc    )
 );
 
-mem#(
+memory#(
     .BITSIZE            (   BITSIZE         ),
     .MEM_SIZE           (   MEM_SIZE        )
-) mem_i (
+) memory_i (
     .mem_addr_i         (   mem_addr        ),
     .mem_data_i         (   mem_data_ctl_m  ),
     .mem_data_o         (   mem_data_m_ctl  ),

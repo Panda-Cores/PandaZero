@@ -42,6 +42,24 @@ module mem_ctrl
 
 enum {IDLE, read, write} CS, NS;
 
+logic [N_ACCESSORS - 1 : 0]             acc_done;
+logic                                   mem_valid;
+logic                                   mem_write;
+logic [(N_ACCESSORS  * BITSIZE) - 1:0]  acc_data;
+logic [BITSIZE - 1 : 0]                 mem_addr;
+logic [BITSIZE - 1 : 0]                 mem_data;
+logic [1 : 0]                           mem_write_size;
+
+assign acc_done_o = acc_done;
+assign mem_valid_o = mem_valid;
+assign mem_write_o = mem_write;
+assign acc_data_o = acc_data;
+assign mem_addr_o = mem_addr;
+assign mem_data_o = mem_data;
+assign mem_write_size_o = mem_write_size;
+
+
+
 int                                         i;
 /* verilator lint_off UNUSED */
 int                                         accessor;
@@ -64,12 +82,10 @@ end
 for(ii = 0; ii < N_ACCESSORS; ii = ii + 1) begin
 always_comb
 begin
-    acc_done_o = 'b0;
-    mem_valid_o = 1'b0;
-    mem_write_o = 1'b0;
-
     case(CS)
         IDLE: begin
+            mem_valid = 1'b0;
+            mem_write = 1'b0;
             // Prefer write over read
             if(acc_write_i != '0)
             begin
@@ -95,42 +111,37 @@ begin
         end
 
         read: begin
-            mem_valid_o = 1'b1;
+            mem_write = 1'b0;
+            mem_valid = 1'b1;
 
             if(accessor == ii)
             begin
-                mem_addr_o = acc_address_i[((ii+1) * BITSIZE) - 1 : (ii * BITSIZE)];
-                acc_data_o[((ii+1) * BITSIZE) - 1 : (ii * BITSIZE)] = mem_data_i;
-            end
-            if(mem_valid_i)
-            begin
-                acc_done_o[accessor] = 1'b1;
-                NS = IDLE;
-            end
-            if(!acc_read_i[accessor])
-            begin
-                NS = IDLE;
+                mem_addr = acc_address_i[((ii+1) * BITSIZE) - 1 : (ii * BITSIZE)];
+                acc_data[((ii+1) * BITSIZE) - 1 : (ii * BITSIZE)] = mem_data_i;
+                if(mem_valid_i)
+                begin
+                    acc_done[ii] = 1'b1;
+                    NS = IDLE;
+                end
             end
         end
 
         write: begin
-            mem_valid_o = 1'b1;
-            mem_write_o = 1'b1;
+            mem_valid = 1'b1;
+            mem_write = 1'b1;
             if(accessor == ii)
             begin
-                mem_addr_o       = acc_address_i[((ii+1) * BITSIZE) - 1 : (ii * BITSIZE)];
-                mem_data_o       = acc_data_i[((ii+1) * BITSIZE) - 1 : (ii * BITSIZE)]; 
-                mem_write_size_o = acc_write_size_i[(2 * (ii+1)) - 1 : ii * 2];
+                mem_addr       = acc_address_i[((ii+1) * BITSIZE) - 1 : (ii * BITSIZE)];
+                mem_data       = acc_data_i[((ii+1) * BITSIZE) - 1 : (ii * BITSIZE)]; 
+                mem_write_size = acc_write_size_i[(2 * (ii+1)) - 1 : ii * 2];
+                if(mem_valid_i)
+                begin
+                    acc_done[ii] = 1'b1;
+                    NS = IDLE;
+                end
             end
-            if(mem_valid_i)
-            begin
-                acc_done_o[accessor] = 1'b1;
-                NS = IDLE;
-            end
-            if(!acc_read_i[accessor])
-            begin
-                NS = IDLE;
-            end
+            else
+                acc_done[ii] = 1'b0;
         end
 
         default:begin

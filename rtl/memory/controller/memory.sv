@@ -6,7 +6,7 @@
 // 
 // -------------(c) Luca Hanel-------------
 
-module mem
+module memory
 #(
     parameter BITSIZE = 32,
     parameter WORDSIZE = 8,
@@ -17,8 +17,8 @@ module mem
     input [31 : 0]                              mem_addr_i,
     /* verilator lint_off ALWCOMBORDER */
     /* verilator lint_off UNOPTFLAT */
-    input [BITSIZE - 1:0]  mem_data_i,
-    output [BITSIZE - 1:0] mem_data_o,
+    input [BITSIZE - 1:0]                       mem_data_i,
+    output [BITSIZE - 1:0]                      mem_data_o,
     /* verilator lint_on ALWCOMBORDER */
     /* verilator lint_on UNOPTFLAT */
     input                                       mem_write_i,
@@ -30,10 +30,16 @@ module mem
     /* verilator lint_off UNOPTFLAT */
 logic [WORDSIZE - 1:0]  memory[MEM_SIZE];
    /* verilator lint_on UNOPTFLAT */
+logic [BITSIZE - 1 : 0] mem_data;
+logic                   mem_valid;
+
+assign mem_data_o = mem_data;
+assign mem_valid_o = mem_valid;
+
 
 always_comb
 begin
-    mem_valid_o = 1'b0;
+    mem_valid = 1'b0;
     if(mem_valid_i)
     begin
         case(mem_write_i)
@@ -47,15 +53,15 @@ begin
                 memory[{mem_addr_i[$clog2(MEM_SIZE) - 1 : 2], 2'b11}] = mem_data_i[(4 * WORDSIZE) - 1 : 3 * WORDSIZE];
                 
             end
-            mem_valid_o = 1'b1;
+            mem_valid = 1'b1;
         end
 
         '0: begin //read
-            mem_valid_o = 1'b1;
-            mem_data_o[WORDSIZE - 1 : 0] = memory[{mem_addr_i[$clog2(MEM_SIZE) - 1 : 2], 2'b00}];
-            mem_data_o[(2 * WORDSIZE) - 1 : WORDSIZE] = memory[{mem_addr_i[$clog2(MEM_SIZE) - 1 : 2], 2'b01}];
-            mem_data_o[(3 * WORDSIZE) - 1 : 2*WORDSIZE] = memory[{mem_addr_i[$clog2(MEM_SIZE) - 1 : 2], 2'b10}];
-            mem_data_o[(4 * WORDSIZE) - 1 : 3*WORDSIZE] = memory[{mem_addr_i[$clog2(MEM_SIZE) - 1 : 2], 2'b11}];
+            mem_valid = 1'b1;
+            mem_data[WORDSIZE - 1 : 0] = memory[{mem_addr_i[$clog2(MEM_SIZE) - 1 : 2], 2'b00}];
+            mem_data[(2 * WORDSIZE) - 1 : WORDSIZE] = memory[{mem_addr_i[$clog2(MEM_SIZE) - 1 : 2], 2'b01}];
+            mem_data[(3 * WORDSIZE) - 1 : 2*WORDSIZE] = memory[{mem_addr_i[$clog2(MEM_SIZE) - 1 : 2], 2'b10}];
+            mem_data[(4 * WORDSIZE) - 1 : 3*WORDSIZE] = memory[{mem_addr_i[$clog2(MEM_SIZE) - 1 : 2], 2'b11}];
         end
         endcase
     end

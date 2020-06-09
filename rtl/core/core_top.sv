@@ -14,8 +14,8 @@ module core_top
     input                           resetn_i,
     //IF-MEM (TODO: caches)
     output [(2 * BITSIZE) - 1 : 0]  MEM_addr_o,
-    inout  [(2 * BITSIZE) - 1 : 0]  MEM_data_i,
-    inout  [(2 * BITSIZE) - 1 : 0]  MEM_data_o,
+    input  [(2 * BITSIZE) - 1 : 0]  MEM_data_i,
+    output [(2 * BITSIZE) - 1 : 0]  MEM_data_o,
     output [1 : 0]                  MEM_read_o,
     output [1 : 0]                  MEM_write_o,
     output [3 : 0]                  MEM_write_size_o,
@@ -129,7 +129,7 @@ begin
         flush_pipeline <= 1'b0;
 end
 
-assign flushn = ((!branch_taken) & (!flush_pipeline) & resetn_i);
+assign flushn = ((!flush_pipeline) & resetn_i);
 assign resetn = resetn_i;
 
     

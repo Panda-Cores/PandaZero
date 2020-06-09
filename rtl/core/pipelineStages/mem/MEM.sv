@@ -9,7 +9,7 @@
 `include "instructions.sv"
 
 module MEM#(
-    parameter BITSIZE
+    parameter BITSIZE = 32
 )(
     input                               clk,
     input                               resetn_i,
@@ -37,14 +37,24 @@ module MEM#(
 enum {GET_INSTR, MEM, PROVIDE_DATA} CS, NS;
 /* verilator lint_off UNOPTFLAT */
 logic                                   MEM_write;
+logic                                   MEM_read;
 logic [BITSIZE - 1 : 0]                 MEM_d;
 /* verilator lint_on UNOPTFLAT */
 logic [BITSIZE - 1 : 0]                 MEM_addr;
 logic [31 : 0]                          MEM_instr;
 
 logic                                   extend;
+logic                                   MEM_EX_get;
+logic                                   MEM_WB_give;
+
+assign MEM_EX_get_o = MEM_EX_get;
+assign MEM_WB_give_o = MEM_WB_give;
+assign MEM_WB_instr_o  = MEM_instr;
+assign MEM_WB_data_o   = MEM_d;
 
 assign MEM_write_o = MEM_write;
+assign MEM_read_o = MEM_read;
+assign MEM_addr_o = MEM_addr; 
 assign MEM_write_size_o = MEM_instr[13:12];
 assign MEM_data_o = MEM_d;
 
@@ -74,16 +84,18 @@ begin
     endcase
 end
 
+
+
 always_comb
 begin
-    MEM_EX_get_o    = 1'b0;
-    MEM_WB_give_o   = 1'b0;
-    MEM_write       = 1'b0;
-    MEM_read_o      = 1'b0;
+    MEM_EX_get    = 1'b0;
+    MEM_WB_give   = 1'b0;
+    MEM_write     = 1'b0;
+    MEM_read      = 1'b0;
 
     case(CS)
         GET_INSTR: begin
-            MEM_EX_get_o = 1'b1;
+            MEM_EX_get = 1'b1;
             if(EX_MEM_give_i) begin
                 MEM_instr   = EX_MEM_instr_i;
                 MEM_addr    = EX_MEM_result_i;
@@ -99,10 +111,9 @@ begin
         end // GET_INSTR
 
         MEM: begin
-            MEM_addr_o = MEM_addr; 
                 case(MEM_instr[6 : 0])
                 `LOAD: begin
-                    MEM_read_o = 1'b1;
+                    MEM_read = 1'b1;
                     if(MEM_valid_i) begin
                         NS      = PROVIDE_DATA;
                         MEM_d   = MEM_data_i;
@@ -123,9 +134,9 @@ begin
 
         PROVIDE_DATA: begin
             if(WB_MEM_get_i)begin
-                MEM_WB_give_o   = 1'b1;
-                MEM_WB_instr_o  = MEM_instr;
-                MEM_WB_data_o   = MEM_d;
+                MEM_WB_give   = 1'b1;
+//                MEM_WB_instr_o  = MEM_instr;
+//                MEM_WB_data_o   = MEM_d;
                 NS              = GET_INSTR;
             end
         end // GIVE_WB

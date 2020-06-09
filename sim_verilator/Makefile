@@ -39,8 +39,9 @@ VERILATOR_FLAGS += --coverage
 #VERILATOR_FLAGS += --debug
 # Add this trace to get a backtrace in gdb
 #VERILATOR_FLAGS += --gdbbt
-INCLDIRS = core
-INCLDIRS += memory
+PRJDIR = /home/luca/projects/RVMicroController
+INCLDIRS = $(PRJDIR)/rtl/core
+INCLDIRS += $(PRJDIR)/rtl/memory
 INCLD += $(INCLDIRS)
 INCLD += $(foreach d, $(INCLDIRS), $(wildcard $d/*))
 INCLD += $(foreach d, $(INCLDIRS), $(wildcard $d/*/*))
@@ -56,7 +57,7 @@ run:
 
 	@echo
 	@echo "-- VERILATE ----------------"
-	$(VERILATOR) $(VERILATOR_FLAGS) $(INCL) riscv_top.sv sim_main.cpp
+	$(VERILATOR) $(VERILATOR_FLAGS) $(INCL) $(PRJDIR)/rtl/riscv_top.sv sim_main.cpp
 
 	@echo
 	@echo "-- COMPILE -----------------"

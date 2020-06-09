@@ -30,34 +30,39 @@ module IF
 enum {FETCH_INSTR, PROVIDE_INSTR} CS, NS;
 
 logic [31 : 0]                                  IF_instruction;
-logic [BITSIZE - 1 : 0]                         IF_pc = '0;
+logic [BITSIZE - 1 : 0]                         IF_pc;
+logic [BITSIZE - 1 : 0]                         IF_pc_t;
 logic                                           incr_addr;
+logic                                           IF_ID_give, MEM_read;
+
+assign MEM_read_o           = MEM_read;
+assign IF_ID_give_o         = IF_ID_give;
+assign MEM_addr_o           = IF_pc;
+assign IF_ID_instr_o        = IF_instruction;
+assign IF_ID_pc_o           = IF_pc;
 
 always_ff@(posedge clk)
 begin
     if(!resetn_i || branch_taken_i)
     begin
         CS <= FETCH_INSTR;
-        IF_pc <= pc_i;
+        IF_pc_t <= 'b0;
     end
     else
     begin
         CS <= NS;
         if(incr_addr)
-            IF_pc <= IF_pc + 4;
+            IF_pc_t <= IF_pc + 4;
     end
 end
 
-always_comb
-begin
-end
+assign IF_pc = (branch_taken_i) ? pc_i : IF_pc_t;
 
 always_comb
 begin
-    IF_ID_give_o = 1'b0;
-    MEM_read_o = 1'b0;
+    IF_ID_give = 1'b0;
+    MEM_read = 1'b0;
     incr_addr = 1'b0;
-    MEM_addr_o = IF_pc;
 
     if(!resetn_i || branch_taken_i)
     begin
@@ -67,11 +72,10 @@ begin
     else
     case(CS)
         FETCH_INSTR: begin
-            MEM_read_o = 1'b1;
+            MEM_read = 1'b1;
             if(MEM_valid_i) begin
                 IF_instruction = MEM_data_i;
                 NS = PROVIDE_INSTR;
-                incr_addr = 1'b1;
             end
                         
         end
@@ -79,10 +83,11 @@ begin
         PROVIDE_INSTR: begin
             if(ID_IF_get_i)
             begin
-                IF_ID_give_o = 1'b1;
-                IF_ID_instr_o = IF_instruction;
-                IF_ID_pc_o = IF_pc;
+                IF_ID_give = 1'b1;
+//                IF_ID_instr_o = IF_instruction;
+//                IF_ID_pc_o = IF_pc;
                 NS = FETCH_INSTR;
+                incr_addr = 1'b1;
             end
         end
 

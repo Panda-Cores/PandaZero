@@ -8,7 +8,7 @@
 
 module cacheLine
 #(
-    parameter N_CACHELINE_LENGTH = 4
+    parameter N_CACHELINE_LENGTH = 4,
     parameter BITSIZE = 32,
     parameter TAGSIZE = BITSIZE - $clog2(N_CACHELINE_LENGTH)
 
@@ -18,7 +18,7 @@ module cacheLine
     input                                   store_i,
     output                                  hit_o,
     output [BITSIZE - 1: 0]                 data_o
-)
+);
 
 logic [TAGSIZE - 1 : 0]     tag;
 

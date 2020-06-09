@@ -1,2 +1,8 @@
-/rtl/logs
-/rtl/obj_dir
+/sim_verilator/logs
+/sim_verilator/obj_dir
+/impl/impl.sim
+/impl/impl.runs
+/impl/impl.hbs
+/impl/impl.hw
+/impl/impl.ip_user_files
+/impl/impl.cache
