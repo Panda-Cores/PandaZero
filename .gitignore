@@ -6,3 +6,8 @@
 /impl/impl.hw
 /impl/impl.ip_user_files
 /impl/impl.cache
+/impl/vivado*
+/impl/impl.srcs
+*.jou
+*.log
+
