@@ -29,8 +29,8 @@ module memory
 
     /* verilator lint_off UNOPTFLAT */
 logic [WORDSIZE - 1:0]  memory[MEM_SIZE];
-   /* verilator lint_on UNOPTFLAT */
 logic [BITSIZE - 1 : 0] mem_data;
+   /* verilator lint_on UNOPTFLAT */
 logic                   mem_valid;
 
 assign mem_data_o = mem_data;

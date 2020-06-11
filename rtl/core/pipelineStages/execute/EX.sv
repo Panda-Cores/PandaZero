@@ -50,7 +50,9 @@ logic [BITSIZE - 1 : 0]                         alu_result;
 logic                                           alu_overflow;
 logic                                           alu_d1_mux;
 logic                                           alu_d0_mux;
+/* verilator lint_off UNOPTFLAT */
 logic                                           branch_taken;
+/* verilator lint_on UNOPTFLAT */
 logic                                           EX_ID_get;
 logic                                           EX_MEM_give;
 

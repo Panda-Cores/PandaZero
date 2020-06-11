@@ -42,10 +42,12 @@ module mem_ctrl
 
 enum {IDLE, read, write} CS, NS;
 
+/* verilator lint_off UNOPTFLAT */
 logic [N_ACCESSORS - 1 : 0]             acc_done;
+logic [(N_ACCESSORS  * BITSIZE) - 1:0]  acc_data;
+/* verilator lint_on UNOPTFLAT */
 logic                                   mem_valid;
 logic                                   mem_write;
-logic [(N_ACCESSORS  * BITSIZE) - 1:0]  acc_data;
 logic [BITSIZE - 1 : 0]                 mem_addr;
 logic [BITSIZE - 1 : 0]                 mem_data;
 logic [1 : 0]                           mem_write_size;
