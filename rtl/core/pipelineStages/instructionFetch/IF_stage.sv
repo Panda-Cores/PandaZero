@@ -6,7 +6,7 @@
 // 
 // -------------(c) Luca Hanel-------------
 
-module IF
+module IF_stage
 #(
     parameter BITSIZE = 32
 )(

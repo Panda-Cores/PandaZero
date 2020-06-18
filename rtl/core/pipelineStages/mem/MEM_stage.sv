@@ -8,7 +8,8 @@
 
 `include "instructions.sv"
 
-module MEM#(
+module MEM_stage
+#(
     parameter BITSIZE = 32
 )(
     input                               clk,

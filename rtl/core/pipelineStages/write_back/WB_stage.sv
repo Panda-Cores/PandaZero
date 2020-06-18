@@ -8,7 +8,7 @@
 
 `include "instructions.sv"
 
-module WB
+module WB_stage
 #(
     BITSIZE
 )(

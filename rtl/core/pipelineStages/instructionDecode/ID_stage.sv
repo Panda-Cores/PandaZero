@@ -8,7 +8,7 @@
 
 `include "instructions.sv"
 
-module ID
+module ID_stage
 #(
     parameter BITSIZE = 32
 )(

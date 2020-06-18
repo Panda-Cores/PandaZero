@@ -9,7 +9,7 @@
 `include "instructions.sv"
 `include "alu_operations.sv"
 
-module EX
+module EX_stage
 #(
     parameter BITSIZE
 )(
