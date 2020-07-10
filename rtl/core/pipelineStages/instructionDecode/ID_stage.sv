@@ -1,185 +1,113 @@
-// ---------------RISCV-Luca---------------
+// ------------------------ Disclaimer -----------------------
+// No warranty of correctness, synthesizability or 
+// functionality of this code is given.
+// Use this code under your own risk.
+// When using this code, copy this disclaimer at the top of 
+// Your file
+//
+// (c) Luca Hanel 2020
+//
+// ------------------------------------------------------------
+//
+// Module name: ID_stage
 // 
-// Module:          ID
-// 
-// Functionality:   Decodes the instruction
-// 
-// -------------(c) Luca Hanel-------------
-
-`include "instructions.sv"
+// Functionality: Instruction decode stage of pipelined
+//                processor. Provides register and immediate
+//                values to the execution stage.
+//                Inserts pipeline stalls to mitigate hazards
+//
+// ------------------------------------------------------------
 
 module ID_stage
-#(
-    parameter BITSIZE = 32
-)(
-    input                                       clk,
-    input                                       resetn_i,
-    output                                      inv_instr_o,
-    //IF-ID
-    input                                       IF_ID_give_i,
-    output                                      ID_IF_get_o,
-    input [31 : 0]                              IF_ID_instr_i,
-    input [BITSIZE - 1 : 0]                     IF_ID_pc_i,
-    //ID-EX
-    input                                       EX_ID_get_i,
-    output                                      ID_EX_give_o,
-    output [31 : 0]                             ID_EX_instruction_o,
-    output [BITSIZE - 1 : 0]                    ID_EX_pc_o,
-    output [BITSIZE - 1 : 0]                    ID_EX_rs1_o,
-    output [BITSIZE - 1 : 0]                    ID_EX_rs2_o,
-    output [BITSIZE - 1 : 0]                    ID_EX_imm_o,
-    //ID-REG
-    output [4 : 0]                              ID_REG_rs1_o,
-    output [4 : 0]                              ID_REG_rs2_o,
-    input [BITSIZE - 1 : 0]                     REG_ID_rs1_d_i,
-    input [BITSIZE - 1 : 0]                     REG_ID_rs2_d_i,
-    input                                       ID_REG_access_i
+(
+    input               clk,
+    input               resetn_i,
+    // Register file
+    input [31:0][32]    registers_i,    // Registers from register file
+    // IF <-> ID
+    input               valid_i,        // P. stage has data ready
+    input [31:0]        instr_i,        // Instruction
+    input [31:0]        pc_i,           // Program counter
+    output              notify_o,       // Notify p. stage that data is read
+    // ID <-> EX
+    input               notify_i,       // Data has been read by n. stage
+    output              valid_o,        // Data is ready
+    output              instr_o,        // Instruction
+    output              pc_o,           // Program counter
+    output [31:0]       rs1d_o,         // Data rs1
+    output [31:0]       rs2d_o,         // Data rs2
+    output [31:0]       imm_o,          // Immediate
+    // WB <-> ID
+    input               rd_i            // Destination register of WB stage
 );
 
-enum {GET_INSTR, DECODE_INSTR} CS, NS;
+// Register lock to mitigate pipeline hazards
+logic [31:0]    reg_lock_n;
+logic [31:0]    reg_lock_q;
 
-logic [31 : 0]                                  ID_instruction;
-logic [BITSIZE - 1 : 0]                         ID_pc;
+// Current instruction & program counter
+logic [31:0]    instr_q;
+logic [31:0]    pc_q;
 
-logic [4 : 0]                                   ID_REG_rs1;
-logic [4 : 0]                                   ID_REG_rs2;
+// State signals
+logic           empty;  // Stage is empty
 
-logic [BITSIZE - 1 : 0]                         ID_EX_rs1_d;
-logic [BITSIZE - 1 : 0]                         ID_EX_rs2_d;
-logic [BITSIZE - 1 : 0]                         ID_EX_imm;
-logic [BITSIZE - 1 : 0]                         immediate;
-
-logic [4 : 0]                                   rs1;
-logic [4 : 0]                                   rs2;
-
-logic                                           imm_extend;
-logic                                           inv_instr;
-logic ID_IF_get, ID_EX_give;
-
-assign ID_REG_rs1_o = ID_REG_rs1;
-assign ID_REG_rs2_o = ID_REG_rs2;
-
-assign ID_EX_instruction_o = ID_instruction;
-assign ID_EX_pc_o          = ID_pc;
-
-always_ff@(posedge clk)
-begin
-    CS <= NS;
+initial begin
+    empty      = 1'b1;
+    reg_lock_n = 'b0;
 end
 
-//Invalid instruction
-assign inv_instr_o = inv_instr;
+// Decodes instructions into pointers to registers
+// and immediate values
+decoder decoder_i(
+    .instr  ( instr_q   ),
+    .rd     ( rd        ),
+    .rs1    ( rs1       ),
+    .rs2    ( rs2       ),
+    .imm    ( imm_o     )
+);
 
-// Provide registers/immediate to EX
-assign ID_EX_rs1_o = REG_ID_rs1_d_i;
-assign ID_EX_rs2_o = REG_ID_rs2_d_i;
-assign ID_EX_imm_o = ID_EX_imm;
-assign ID_IF_get_o = ID_IF_get;
-assign ID_EX_give_o = ID_EX_give;
+// Pass values to next stage
+assign rs1d_o   = registers_i[rs1];
+assign rs2d_o   = registers_i[rs2];
+assign instr_o  = instr_q;
+assign pc_o     = pc_q;
 
-always_comb
-begin
-    if(imm_extend)
-    begin
-        ID_EX_imm[31:0] = {{20{ID_instruction[31]}}, immediate[11:0]};
+// Pipeline hazard mitigation by stalling
+always_comb begin
+    valid_o = 1'b0;
+    // If the destination register is locked, stall
+    // Else lock the register
+    if(!reg_lock_q[rd] || rd == 'b0) begin
+        valid_o        = 1'b1;
+        reg_lock_n[rd] = 1'b1;
     end
-    else
-        ID_EX_imm = immediate;
-
+    // Free the register that WB stage writes into
+    reg_lock_n[rd_i] = 1'b0;
 end
 
-always_comb
+always_ff @(posedge clk, negedge resetn_i)
 begin
-    ID_IF_get     = 1'b0;
-    ID_EX_give    = 1'b0;
-    imm_extend      = 1'b0;
+    // State register for register locking
+    reg_lock_q <= reg_lock_n;
 
-    if(!resetn_i)
-    begin
-        inv_instr   = 1'b0;
-        NS = GET_INSTR;
-        ID_instruction = '0;
+    // If next stage is ready, or the current stage is empty
+    // try to get next instruction from previous stage.
+    // Remain empty until instruction is obtained
+    if(notify_i || empty) begin
+        if(valid_i) begin
+            instr_q  <= instr_i;
+            pc_q     <= pc_i;
+            notify_o <= 1'b1;
+            empty    <= 1'b0;
+        end
+        else begin
+            notify_o <= 1'b0;
+            empty    <= 1'b1;
+        end
+    else begin
+        notify_o     <= 1'b0;
     end
-    else
-    case(CS)
-        GET_INSTR: begin
-            inv_instr = 1'b0;
-            ID_IF_get = 1'b1;
-            if(IF_ID_give_i)
-            begin
-                ID_instruction = IF_ID_instr_i;
-                ID_pc = IF_ID_pc_i;
-                NS = DECODE_INSTR;
-            end
-        end
-
-        DECODE_INSTR: begin
-            // Decode
-            case(ID_instruction[6:0])
-                `LUI: begin
-                    immediate   = {ID_instruction[31:12], 12'b0};
-                end
-                
-                `IMM_REG_ALU: begin
-                    ID_REG_rs1      = ID_instruction[19:15];
-                    immediate[11:0] = ID_instruction[31:20];
-                    imm_extend      = 1'b1;
-                end
-
-                `REG_REG_ALU: begin
-                    ID_REG_rs1    = ID_instruction[19:15];
-                    ID_REG_rs2    = ID_instruction[24:20];                    
-                end
-
-                `LOAD: begin
-                    ID_REG_rs1    = ID_instruction[19:15];
-                    immediate[11:0] = ID_instruction[31:20];
-                    imm_extend      = 1'b1;
-                end
-
-                `STORE: begin
-                    ID_REG_rs1    = ID_instruction[19:15];
-                    ID_REG_rs2    = ID_instruction[24:20];
-                    immediate[11:0] = {ID_instruction[31:25], ID_instruction[11:7]};
-                    imm_extend      = 1'b1;
-                end
-
-                `BRANCH: begin
-                    ID_REG_rs1    = ID_instruction[19:15];
-                    ID_REG_rs2    = ID_instruction[24:20];
-                    immediate[12:0] = {ID_instruction[31], ID_instruction[7], ID_instruction[30 : 25], ID_instruction[11:8], 1'b0};
-                    imm_extend      = 1'b1;
-                end
-
-                `JALR: begin
-                    ID_REG_rs1      = ID_instruction[19:15];
-                    immediate[12:1] = {ID_instruction[31:21], 1'b0};
-                    imm_extend      = 1'b1;
-                end
-
-                `JAL: begin
-                    immediate = {{12{ID_instruction[31]}}, ID_instruction[19:12], ID_instruction[20], ID_instruction[30:21], 1'b0};
-                end
-
-                `AUIPC: begin
-                    immediate = {ID_instruction[31:12], 12'b0};
-                end
-
-                default: begin
-                    inv_instr = 1'b1;
-                    NS = GET_INSTR;
-                end
-            endcase
-
-            // Provide next stage with instructions
-            if(EX_ID_get_i && ID_REG_access_i && !inv_instr)
-            begin
-                ID_EX_give        = 1'b1;
-                NS                  = GET_INSTR;
-            end
-        end
-        default: begin
-        end
-    endcase
 end
+
 endmodule

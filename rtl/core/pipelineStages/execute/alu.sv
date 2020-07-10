@@ -38,9 +38,8 @@ module alu
             result = A_i << B_i;
         `LSHIFT_RIGHT :
             result = A_i >> B_i;
-        `ASHIFT_RIGHT :begin
+        `ASHIFT_RIGHT :
             result = $signed(A_i) >>> B_i;
-        end
         `AND :
             result = A_i & B_i;
         `OR :

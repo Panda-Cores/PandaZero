@@ -84,8 +84,6 @@ begin
             if(ID_IF_get_i)
             begin
                 IF_ID_give = 1'b1;
-//                IF_ID_instr_o = IF_instruction;
-//                IF_ID_pc_o = IF_pc;
                 NS = FETCH_INSTR;
                 incr_addr = 1'b1;
             end
