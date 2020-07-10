@@ -103,6 +103,7 @@ begin
     else
     case(CS)
         GET_INSTR: begin
+            inv_instr = 1'b0;
             ID_IF_get = 1'b1;
             if(IF_ID_give_i)
             begin
@@ -150,20 +151,30 @@ begin
                     imm_extend      = 1'b1;
                 end
 
+                `JALR: begin
+                    ID_REG_rs1      = ID_instruction[19:15];
+                    immediate[12:1] = {ID_instruction[31:21], 1'b0};
+                    imm_extend      = 1'b1;
+                end
+
+                `JAL: begin
+                    immediate = {{12{ID_instruction[31]}}, ID_instruction[19:12], ID_instruction[20], ID_instruction[30:21], 1'b0};
+                end
+
+                `AUIPC: begin
+                    immediate = {ID_instruction[31:12], 12'b0};
+                end
+
                 default: begin
                     inv_instr = 1'b1;
+                    NS = GET_INSTR;
                 end
             endcase
 
             // Provide next stage with instructions
-            if(EX_ID_get_i && ID_REG_access_i)
+            if(EX_ID_get_i && ID_REG_access_i && !inv_instr)
             begin
-                // ID_rd_last          = ID_EX_rd;
                 ID_EX_give        = 1'b1;
-//                ID_EX_instruction_o = ID_instruction;
-//                ID_EX_pc_o          = ID_pc;
-//                ID_EX_rs1_o         = ID_EX_rs1_d;
-//                ID_EX_rs2_o         = ID_EX_rs2_d;
                 NS                  = GET_INSTR;
             end
         end

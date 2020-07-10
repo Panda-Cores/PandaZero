@@ -67,6 +67,7 @@ logic                           MEM_EX_get;
 logic [31 : 0]                  EX_MEM_instr;
 logic [BITSIZE - 1 : 0]         EX_MEM_result;
 logic [BITSIZE - 1 : 0]         EX_MEM_rs2;
+logic [BITSIZE - 1 : 0]         EX_MEM_pc;
 
 //MEM
 logic                           MEM_MEM_write;
@@ -156,7 +157,7 @@ registerFile #(
     .data_rs2_o (   REG_rs2_d   )
 );
 
-IF #(
+IF_stage #(
     .BITSIZE        (   BITSIZE )
 ) IF_i (
     .clk            (   clk         ),
@@ -175,7 +176,7 @@ IF #(
     .pc_i           (   EX_IF_pc    )
 );
 
-ID #(
+ID_stage #(
     .BITSIZE            (   BITSIZE     )
 ) ID_i (
     .clk                (   clk         ),
@@ -199,7 +200,7 @@ ID #(
     .ID_REG_access_i    (   REG_mux     )
 );
 
-EX #(
+EX_stage #(
     .BITSIZE            (   BITSIZE     )
 ) EX_i (
     .clk                (   clk         ),
@@ -213,19 +214,21 @@ EX #(
     .ID_EX_imm_i        (   ID_EX_imm   ),
     .MEM_EX_get_i       (   MEM_EX_get  ),
     .EX_MEM_give_o      (   EX_MEM_give ),
+    .EX_MEM_pc_o        (   EX_MEM_pc   ),
     .EX_MEM_instruction_o(  EX_MEM_instr),
     .EX_MEM_result_o    (   EX_MEM_result),
     .EX_MEM_rs2_o       (   EX_MEM_rs2  ),
     .branch_taken_o     (   branch_taken)
 );
 
-MEM #(
+MEM_stage #(
     .BITSIZE            (   BITSIZE     )
 ) MEM_i (
     .clk                (   clk         ),
     .resetn_i           (   resetn      ),
     .EX_MEM_give_i      (   EX_MEM_give ),
     .MEM_EX_get_o       (   MEM_EX_get  ),
+    .EX_MEM_pc_i        (   EX_MEM_pc   ),
     .EX_MEM_instr_i     (   EX_MEM_instr),
     .EX_MEM_result_i    (   EX_MEM_result),
     .EX_MEM_rs2_i       (   EX_MEM_rs2  ),
@@ -242,7 +245,7 @@ MEM #(
     .MEM_WB_data_o      (   MEM_WB_data )
 );
 
-WB #(
+WB_stage #(
     .BITSIZE            (   BITSIZE     )
 ) WB_i (
     .clk                (   clk         ),

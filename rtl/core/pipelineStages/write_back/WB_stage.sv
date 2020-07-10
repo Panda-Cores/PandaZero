@@ -74,15 +74,16 @@ begin
 
         WB_INSTR: begin
             case(WB_instruction[6:0])
-                `LUI, `IMM_REG_ALU, `REG_REG_ALU, `LOAD: begin
-                    WB_REG_rd = WB_instruction[11 : 7];
-                    WB_REG_access = 1'b0;
+                `LUI, `IMM_REG_ALU, `REG_REG_ALU, `LOAD, `JAL, `JALR, `AUIPC: begin
+                    if(WB_instruction[11 : 7] != 'b0) begin
+                        WB_REG_rd = WB_instruction[11 : 7];
+                        WB_REG_access = 1'b0;
+                    end
                 end
                 default:
                     WB_REG_rd = 'b0;
             endcase
             
-//            WB_REG_d_o = WB_d;
             NS = GET_INSTR;
         end
 

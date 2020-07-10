@@ -3,18 +3,18 @@ PROJECT:=xilinx_ddr3_controller
 all:
 	vivado -mode batch -source tcl/run_native.tcl
 	mkdir -p ip
-	# cp ${PROJECT}.srcs/source_1/ip/${PROJECT}/${PROJECT}_stub.v ./ip
-	# cp ${PROJECT}.srcs/source_1/ip/${PROJECT}/${PROJECT}.xci ./ip
-	# cp ${PROJECT}.srcs/source_1/ip/${PROJECT}/${PROJECT}.veo ./ip
-	# cp ${PROJECT}.srcs/source_1/ip/${PROJECT}/${PROJECT}.dcp ./ip
+	cp ${PROJECT}.srcs/sources_1/ip/${PROJECT}/${PROJECT}_stub.v ./ip
+	cp ${PROJECT}.srcs/sources_1/ip/${PROJECT}/${PROJECT}.xci ./ip
+	cp ${PROJECT}.srcs/sources_1/ip/${PROJECT}/${PROJECT}.veo ./ip
+	cp ${PROJECT}.srcs/sources_1/ip/${PROJECT}/${PROJECT}.dcp ./ip
 
 axi:
 	vivado -mode batch -source tcl/run_axi.tcl
 	mkdir -p ip
-	# cp ${PROJECT}.srcs/source_1/ip/${PROJECT}/${PROJECT}_stub.v ./ip
-	# cp ${PROJECT}.srcs/source_1/ip/${PROJECT}/${PROJECT}.xci ./ip
-	# cp ${PROJECT}.srcs/source_1/ip/${PROJECT}/${PROJECT}.veo ./ip
-	# cp ${PROJECT}.srcs/source_1/ip/${PROJECT}/${PROJECT}.dcp ./ip
+	cp ${PROJECT}.srcs/sources_1/ip/${PROJECT}/${PROJECT}_stub.v ./ip
+	cp ${PROJECT}.srcs/sources_1/ip/${PROJECT}/${PROJECT}.xci ./ip
+	cp ${PROJECT}.srcs/sources_1/ip/${PROJECT}/${PROJECT}.veo ./ip
+	cp ${PROJECT}.srcs/sources_1/ip/${PROJECT}/${PROJECT}.dcp ./ip
 
 gui:
 	vivado -mode gui -source tcl/run_native.tcl

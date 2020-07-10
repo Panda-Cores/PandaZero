@@ -20,6 +20,7 @@ module MEM_stage
     input [31 : 0]                      EX_MEM_instr_i,
     input [31 : 0]                      EX_MEM_result_i,
     input [BITSIZE - 1 : 0]             EX_MEM_rs2_i,
+    input [BITSIZE - 1 : 0]             EX_MEM_pc_i,
     //MEM-MEM
     output [BITSIZE - 1 : 0]            MEM_addr_o,
     input [BITSIZE - 1 : 0]             MEM_data_i,
@@ -100,14 +101,22 @@ begin
             if(EX_MEM_give_i) begin
                 MEM_instr   = EX_MEM_instr_i;
                 MEM_addr    = EX_MEM_result_i;
-                if(EX_MEM_instr_i[6:0] == `LOAD || EX_MEM_instr_i[6:0] == `STORE) begin
-                    NS = MEM;
-                    MEM_d = EX_MEM_rs2_i;
-                end
-                else begin
-                    NS = PROVIDE_DATA;
-                    MEM_d = EX_MEM_result_i;                  
-                end
+                case(EX_MEM_instr_i[6:0])
+                    `LOAD, `STORE: begin
+                        NS = MEM;
+                        MEM_d = EX_MEM_rs2_i;
+                    end
+
+                    `JAL, `JALR, `AUIPC: begin
+                        NS = PROVIDE_DATA;
+                        MEM_d = EX_MEM_pc_i + 4;
+                    end
+
+                    default: begin
+                        NS = PROVIDE_DATA;
+                        MEM_d = EX_MEM_result_i;
+                    end
+                endcase
             end
         end // GET_INSTR
 
@@ -136,8 +145,6 @@ begin
         PROVIDE_DATA: begin
             if(WB_MEM_get_i)begin
                 MEM_WB_give   = 1'b1;
-//                MEM_WB_instr_o  = MEM_instr;
-//                MEM_WB_data_o   = MEM_d;
                 NS              = GET_INSTR;
             end
         end // GIVE_WB

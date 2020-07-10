@@ -26,6 +26,7 @@ module EX_stage
     //EX-MEM
     input                                       MEM_EX_get_i,
     output                                      EX_MEM_give_o,
+    output [BITSIZE - 1 : 0]                    EX_MEM_pc_o,
     output [31 : 0]                             EX_MEM_instruction_o,
     output [BITSIZE - 1 : 0]                    EX_MEM_result_o,
     output [BITSIZE - 1 : 0]                    EX_MEM_rs2_o,
@@ -64,6 +65,7 @@ assign ALU_d1 = (alu_d1_mux) ? EX_imm : EX_d1;
 assign branch_taken_o   = branch_taken;
 assign EX_ID_get_o      = EX_ID_get;
 assign EX_MEM_give_o    = EX_MEM_give;
+assign EX_MEM_pc_o      = EX_pc;
 assign EX_MEM_result_o  = EX_result;
 assign EX_MEM_instruction_o = EX_instruction;
 assign EX_MEM_rs2_o     = EX_d1;
@@ -155,6 +157,29 @@ begin
                         default: begin
                         end
                     endcase
+                end
+
+                `JAL: begin
+                    alu_operation   = `ADDITION;
+                    branch_taken    = 1'b1;
+                    alu_d1_mux      = 1'b1;
+                    alu_d0_mux      = 1'b1;
+                    EX_result       = alu_result;
+                end
+
+                `JALR: begin
+                    alu_operation   = `ADDITION;
+                    branch_taken    = 1'b1;
+                    alu_d1_mux      = 1'b1;
+                    EX_result       = alu_result;
+                end
+
+                `AUIPC: begin
+                    alu_operation   = `ADDITION;
+                    branch_taken    = 1'b1;
+                    alu_d1_mux      = 1'b1;
+                    alu_d0_mux      = 1'b1;
+                    EX_result       = alu_result;
                 end
 
                 default: begin

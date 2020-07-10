@@ -72,6 +72,10 @@ initial begin
     {>>{memory['h7], memory['h6], memory['h5], memory['h4]}} = 32'b000000000001_00010_000_00010_0010011; //addi 1, x2, x2;
     {>>{memory['hb], memory['ha], memory['h9], memory['h8]}} = 32'b1111111_00001_00010_100_11101_1100011; //blt x2, x1, -2
     {>>{memory['hf], memory['he], memory['hd], memory['hc]}} = 32'b000000_00010_00000_010_11000_0100011; //sw x2, 24+x0;
+    {>>{memory['h13], memory['h12], memory['h11], memory['h10]}} = 32'b1_1111111110_1_11111111_00111_0010011; //jal +4, x7;
+    {>>{memory['h17], memory['h16], memory['h15], memory['h14]}} = 32'b000000_00010_00000_010_11000_0100011; //sw x2, 24+x0;
+    {>>{memory['h1b], memory['h1a], memory['h19], memory['h18]}} = 32'b000000_00010_00000_010_11000_0100011; //sw x2, 24+x0;
+    {>>{memory['h1f], memory['h1e], memory['h1d], memory['h1c]}} = 32'b000000_00010_00000_010_11000_0100011; //sw x2, 24+x0;
 end
 
 endmodule
