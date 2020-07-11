@@ -77,7 +77,7 @@ assign pc_o     = pc_q;
 always_comb begin
     valid_o = 1'b0;
     // If the destination register is locked, stall
-    // Else lock the register
+    // Else lock the register (bypass if rd=0)
     if(!reg_lock_q[rd] || rd == 'b0) begin
         valid_o        = 1'b1;
         reg_lock_n[rd] = 1'b1;
@@ -91,7 +91,7 @@ begin
     // State register for register locking
     reg_lock_q <= reg_lock_n;
 
-    // If next stage is ready, or the current stage is empty
+    // If next stage has read the data or the current stage is empty,
     // try to get next instruction from previous stage.
     // Remain empty until instruction is obtained
     if(notify_i || empty) begin
