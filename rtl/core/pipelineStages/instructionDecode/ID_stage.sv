@@ -52,11 +52,6 @@ logic [31:0]    pc_q;
 // State signals
 logic           empty;  // Stage is empty
 
-initial begin
-    empty      = 1'b1;
-    reg_lock_n = 'b0;
-end
-
 // Decodes instructions into pointers to registers
 // and immediate values
 decoder decoder_i(
@@ -74,39 +69,52 @@ assign instr_o  = instr_q;
 assign pc_o     = pc_q;
 
 // Pipeline hazard mitigation by stalling
-always_comb begin
+always_comb
+begin
     valid_o = 1'b0;
-    // If the destination register is locked, stall
-    // Else lock the register (bypass if rd=0)
-    if(!reg_lock_q[rd] || rd == 'b0) begin
-        valid_o        = 1'b1;
-        reg_lock_n[rd] = 1'b1;
+    if(!resetn_i) begin
+        reg_lock_n = 'b0;
     end
-    // Free the register that WB stage writes into
-    reg_lock_n[rd_i] = 1'b0;
+    else begin
+        // If the destination register is locked, stall
+        // Else lock the register (bypass if rd=0)
+        if(!reg_lock_q[rd] || rd == 'b0) begin
+            valid_o        = 1'b1;
+            reg_lock_n[rd] = 1'b1;
+        end
+        // Free the register that WB stage writes into
+        reg_lock_n[rd_i] = 1'b0;
+    end
 end
 
 always_ff @(posedge clk, negedge resetn_i)
 begin
-    // State register for register locking
-    reg_lock_q <= reg_lock_n;
-
-    // If next stage has read the data or the current stage is empty,
-    // try to get next instruction from previous stage.
-    // Remain empty until instruction is obtained
-    if(notify_i || empty) begin
-        if(valid_i) begin
-            instr_q  <= instr_i;
-            pc_q     <= pc_i;
-            notify_o <= 1'b1;
-            empty    <= 1'b0;
-        end
-        else begin
-            notify_o <= 1'b0;
-            empty    <= 1'b1;
-        end
+    if(!resetn_i) begin
+        reg_lock_q <= 'b0;
+        empty <= 1'b1;
+        notify_o <= 1'b0;
+    end
     else begin
-        notify_o     <= 1'b0;
+        // State register for register locking
+        reg_lock_q <= reg_lock_n;
+
+        // If next stage has read the data or the current stage is empty,
+        // try to get next instruction from previous stage.
+        // Remain empty until instruction is obtained
+        if(notify_i || empty) begin
+            if(valid_i) begin
+                instr_q  <= instr_i;
+                pc_q     <= pc_i;
+                notify_o <= 1'b1;
+                empty    <= 1'b0;
+            end
+            else begin
+                notify_o <= 1'b0;
+                empty    <= 1'b1;
+            end
+        end else begin
+            notify_o     <= 1'b0;
+        end
     end
 end
 

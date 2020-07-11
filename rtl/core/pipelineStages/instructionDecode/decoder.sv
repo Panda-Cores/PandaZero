@@ -20,10 +20,10 @@
 
 module decoder
 (
-    input [31:0]    instr;
-    output [4:0]    rs1;
-    output [4:0]    rs2;
-    output [31:0]   imm;
+    input [31:0]    instr,
+    output [4:0]    rs1,
+    output [4:0]    rs2,
+    output [31:0]   imm
 );
 
 // Decode the register pointers and immediate values
