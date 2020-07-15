@@ -11,7 +11,9 @@ module core_top
     parameter BITSIZE = 32
 )(
     input                           clk,
+    /* verilator lint_off SYNCASYNCNET */
     input                           resetn_i,
+    /* verilator lint_on SYNCASYNCNET */
     //IF-MEM (TODO: caches)
     output [(2 * BITSIZE) - 1 : 0]  MEM_addr_o,
     input  [(2 * BITSIZE) - 1 : 0]  MEM_data_i,
@@ -21,14 +23,15 @@ module core_top
     output [3 : 0]                  MEM_write_size_o,
     input  [1 : 0]                  MEM_valid_i
 );
-
+/* verilator lint_off SYNCASYNCNET */
 logic                           resetn;
+/* verilator lint_on SYNCASYNCNET */
 logic                           flush_pipeline;
-logic                           flushn;
+logic                           flush;
 
 //IF-ID
-logic                           ID_IF_get;
-logic                           IF_ID_give;
+logic                           ID_IF_ack;
+logic                           IF_ID_valid;
 logic [31 : 0]                  IF_ID_instr;
 logic [BITSIZE - 1 : 0]         IF_ID_pc;
 
@@ -40,13 +43,13 @@ logic                           IF_MEM_valid;
 
 //EX-IF (branch)
 /* verilator lint_off UNOPTFLAT */
-logic                           branch_taken;
+logic                           branch;
 /* verilator lint_on UNOPTFLAT */
 logic [BITSIZE - 1 : 0]         EX_IF_pc;
 
 //ID-EX
-logic                           EX_ID_get;
-logic                           ID_EX_give;
+logic                           EX_ID_ack;
+logic                           ID_EX_valid;
 logic [31 : 0]                  ID_EX_instr;
 logic [BITSIZE - 1 : 0]         ID_EX_pc;
 logic [BITSIZE - 1 : 0]         ID_EX_rs1;
@@ -119,9 +122,10 @@ assign MEM_read_o[1]                = IF_MEM_read;
 assign IF_MEM_valid                 = MEM_valid_i[1];
 
 // Flush pipeline in case of taken branch
+// TODO rework!!!
 always_ff@(posedge clk)
 begin
-    if(branch_taken)
+    if(branch)
     begin
         flush_pipeline <= 1'b1;
         EX_IF_pc <= EX_MEM_result;
@@ -130,10 +134,8 @@ begin
         flush_pipeline <= 1'b0;
 end
 
-assign flushn = ((!flush_pipeline) & resetn_i);
+assign flush = flush_pipeline;
 assign resetn = resetn_i;
-
-    
 
 //WB->register file
 always_comb
@@ -146,79 +148,75 @@ begin
     REG_ID_rs2_d = REG_rs2_d;
 end
 
-registerFile #(
-    .BITSIZE    (   BITSIZE )
-)registerFile_i(
-    .rd         (   REG_rd      ),
-    .rs1        (   REG_rs1     ),
-    .rs2        (   REG_rs2     ),
-    .data_rd_i  (   REG_rd_d    ),
-    .data_rs1_o (   REG_rs1_d   ),
-    .data_rs2_o (   REG_rs2_d   )
+registerFile registerFile_i (
+    .clk        ( clk         ),
+    .rstn_i     ( resetn_i    ),
+    .rd         ( REG_rd      ),
+    .rs1        ( REG_rs1     ),
+    .rs2        ( REG_rs2     ),
+    .data_rd_i  ( REG_rd_d    ),
+    .data_rs1_o ( REG_rs1_d   ),
+    .data_rs2_o ( REG_rs2_d   )
 );
 
-IF_stage #(
-    .BITSIZE        (   BITSIZE )
-) IF_i (
-    .clk            (   clk         ),
-    .resetn_i       (   resetn      ),
-    .ID_IF_get_i    (   ID_IF_get   ),
-    .IF_ID_give_o   (   IF_ID_give  ),
-    .IF_ID_instr_o  (   IF_ID_instr ),
-    .IF_ID_pc_o     (   IF_ID_pc    ),
+IF_stage IF_i (
+    .clk         ( clk           ),
+    .rstn_i      ( resetn        ),
+    .flush_i     ( flush         ),
+    .ack_i       ( ID_IF_ack     ),
+    .valid_o     ( IF_ID_valid   ),
+    .instr_o     ( IF_ID_instr   ),
+    .pc_o        ( IF_ID_pc      ),
     //TODO: Cache
-    .MEM_addr_o     (   IF_MEM_addr ),
-    .MEM_data_i     (   IF_MEM_data_i),
-    .MEM_read_o     (   IF_MEM_read ),
-    .MEM_valid_i    (   IF_MEM_valid),
+    .MEM_addr_o  ( IF_MEM_addr   ),
+    .MEM_data_i  ( IF_MEM_data_i ),
+    .MEM_read_o  ( IF_MEM_read   ),
+    .MEM_valid_i ( IF_MEM_valid  ),
     //Branching
-    .branch_taken_i (   branch_taken),
-    .pc_i           (   EX_IF_pc    )
+    .branch_i    ( branch        ),
+    .pc_i        ( EX_IF_pc      )
 );
 
-ID_stage #(
-    .BITSIZE            (   BITSIZE     )
-) ID_i (
-    .clk                (   clk         ),
-    .resetn_i           (   flushn      ),
-    .inv_instr_o        (   inv_instr   ),
-    .IF_ID_give_i       (   IF_ID_give  ),
-    .ID_IF_get_o        (   ID_IF_get   ),
-    .IF_ID_instr_i      (   IF_ID_instr ),
-    .IF_ID_pc_i         (   IF_ID_pc    ),
-    .EX_ID_get_i        (   EX_ID_get   ),
-    .ID_EX_give_o       (   ID_EX_give  ),
-    .ID_EX_instruction_o(   ID_EX_instr ),
-    .ID_EX_pc_o         (   ID_EX_pc    ),
-    .ID_EX_rs1_o        (   ID_EX_rs1   ),
-    .ID_EX_rs2_o        (   ID_EX_rs2   ),
-    .ID_EX_imm_o        (   ID_EX_imm   ),
-    .ID_REG_rs1_o       (   ID_REG_rs1  ),
-    .ID_REG_rs2_o       (   ID_REG_rs2  ),
-    .REG_ID_rs1_d_i     (   REG_ID_rs1_d),
-    .REG_ID_rs2_d_i     (   REG_ID_rs2_d),
-    .ID_REG_access_i    (   REG_mux     )
+ID_stage ID_i (
+    .clk      ( clk          ),
+    .rstn_i   ( resetn_i     ),
+    .flush_i  ( flush        ),
+    .valid_i  ( IF_ID_valid  ),
+    .ack_o    ( ID_IF_ack    ),
+    .instr_i  ( IF_ID_instr  ),
+    .pc_i     ( IF_ID_pc     ),
+    .ack_i    ( EX_ID_ack    ),
+    .valid_o  ( ID_EX_valid  ),
+    .instr_o  ( ID_EX_instr  ),
+    .pc_o     ( ID_EX_pc     ),
+    .rs1_o    ( ID_EX_rs1    ),
+    .rs2_o    ( ID_EX_rs2    ),
+    .imm_o    ( ID_EX_imm    ),
+    .rs1a_o   ( ID_REG_rs1   ),
+    .rs2a_o   ( ID_REG_rs2   ),
+    .rs1d_i   ( REG_ID_rs1_d ),
+    .rs2d_i   ( REG_ID_rs2_d ),
+    .rd_i     ( WB_REG_rd    )
 );
 
-EX_stage #(
-    .BITSIZE            (   BITSIZE     )
-) EX_i (
+EX_stage EX_i (
     .clk                (   clk         ),
-    .resetn_i           (   flushn      ),
-    .ID_EX_give_i       (   ID_EX_give  ),
-    .EX_ID_get_o        (   EX_ID_get   ),
-    .ID_EX_instruction_i(   ID_EX_instr ),
-    .ID_EX_pc_i         (   ID_EX_pc    ),
-    .ID_EX_rs1_i        (   ID_EX_rs1   ),
-    .ID_EX_rs2_i        (   ID_EX_rs2   ),
-    .ID_EX_imm_i        (   ID_EX_imm   ),
-    .MEM_EX_get_i       (   MEM_EX_get  ),
-    .EX_MEM_give_o      (   EX_MEM_give ),
-    .EX_MEM_pc_o        (   EX_MEM_pc   ),
-    .EX_MEM_instruction_o(  EX_MEM_instr),
-    .EX_MEM_result_o    (   EX_MEM_result),
-    .EX_MEM_rs2_o       (   EX_MEM_rs2  ),
-    .branch_taken_o     (   branch_taken)
+    .rstn_i             (   resetn_i    ),
+    .flush_i            (   flush       ),
+    .valid_i            (   ID_EX_valid  ),
+    .ack_o              (   EX_ID_ack   ),
+    .instr_i            (   ID_EX_instr ),
+    .pc_i               (   ID_EX_pc    ),
+    .rs1_i              (   ID_EX_rs1   ),
+    .rs2_i              (   ID_EX_rs2   ),
+    .imm_i              (   ID_EX_imm   ),
+    .ack_i              (   MEM_EX_get  ),
+    .valid_o            (   EX_MEM_give ),
+    .pc_o               (   EX_MEM_pc   ),
+    .instr_o            (   EX_MEM_instr),
+    .result_o           (   EX_MEM_result),
+    .rs2_o              (   EX_MEM_rs2  ),
+    .branch_o           (   branch      )
 );
 
 MEM_stage #(

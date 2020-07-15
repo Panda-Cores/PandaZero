@@ -16,22 +16,20 @@
 //
 // ------------------------------------------------------------
 
-module EX_stage
-#(
-    parameter BITSIZE
-)(
+module EX_stage(
     input                   clk,
-    input                   rstn_i,    
+    input                   rstn_i,  
+    input                   flush_i,  
     //ID-EX
     input                   valid_i,
-    output                  notify_o,
+    output                  ack_o,
     input [31 : 0]          instr_i,
     input [31:0]            pc_i,
     input [31:0]            rs1_i,
     input [31:0]            rs2_i,
     input [31:0]            imm_i,
     //EX-MEM
-    input                   notify_i,
+    input                   ack_i,
     output                  valid_o,
     output [31:0]           pc_o,
     output [31:0]           instr_o,
@@ -51,6 +49,8 @@ struct packed {
 } data_n, data_q;
 
 logic [31:0]        result;
+logic               branch;
+
 
 executer executer_i (
     .instr        ( instr_i ),

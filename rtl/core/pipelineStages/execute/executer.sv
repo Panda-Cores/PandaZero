@@ -31,8 +31,8 @@ module executer
 );
 
 logic [3:0] operation;
-logic [3:0] ALU_d0;
-logic [3:0] ALU_d1;
+logic [31:0] ALU_d0;
+logic [31:0] ALU_d1;
 logic       alu_d0_mux;
 logic       alu_d1_mux;
 
@@ -71,17 +71,17 @@ begin
             alu_d0_mux      = 1'b1;
             case(instr[14:12])
                 3'b000: // BEQ
-                    branch_taken = (EX_d0 == EX_d1) ? 1'b1 : 1'b0;
+                    branch_taken = (rs1 == rs2) ? 1'b1 : 1'b0;
                 3'b001: // BNE
-                    branch_taken = (EX_d0 != EX_d1) ? 1'b1 : 1'b0;
+                    branch_taken = (rs1 != rs2) ? 1'b1 : 1'b0;
                 3'b100: // BLT
-                    branch_taken = (EX_d0 < EX_d1) ? 1'b1 : 1'b0;
+                    branch_taken = (rs1 < rs2) ? 1'b1 : 1'b0;
                 3'b101: // BGE
-                    branch_taken = (EX_d0 >= EX_d1) ? 1'b1 : 1'b0;
+                    branch_taken = (rs1 >= rs2) ? 1'b1 : 1'b0;
                 3'b110: // TODO: BLTU
-                    branch_taken = (EX_d0 < EX_d1) ? 1'b1 : 1'b0;
+                    branch_taken = (rs1 < rs2) ? 1'b1 : 1'b0;
                 3'b111: // TODO: BGEU
-                    branch_taken = (EX_d0 >= EX_d1) ? 1'b1 : 1'b0;
+                    branch_taken = (rs1 >= rs2) ? 1'b1 : 1'b0;
                 default: begin
                 end
             endcase
@@ -104,6 +104,8 @@ begin
     endcase
 end
 
+logic oflow;
+
 alu #(
     .BITSIZE    ( 32        )
 ) alu_i (
@@ -111,7 +113,7 @@ alu #(
     .B_i        ( ALU_d1    ),
     .operation_i( operation ),
     .R_o        ( result    ),
-    .overflow_o ( )
+    .overflow_o ( oflow)
 );
 
 endmodule

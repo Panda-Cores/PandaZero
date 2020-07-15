@@ -23,6 +23,7 @@ module decoder
     input [31:0]    instr,
     output [4:0]    rs1,
     output [4:0]    rs2,
+    output [4:0]    rd,
     output [31:0]   imm
 );
 
@@ -42,7 +43,7 @@ begin
         `IMM_REG_ALU: begin
             rs1 = instr[19:15];
             rd  = instr[11 : 7];
-            imm = {20{instr[31]}, instr[31:20]};
+            imm = {{20{instr[31]}}, instr[31:20]};
         end
 
         `REG_REG_ALU: begin
@@ -54,25 +55,25 @@ begin
         `LOAD: begin
             rs1    = instr[19:15];
             rd  = instr[11 : 7];
-            imm = {20{instr[31]}, instr[31:20]};
+            imm = {{20{instr[31]}}, instr[31:20]};
         end
 
         `STORE: begin
             rs1 = instr[19:15];
             rs2 = instr[24:20];
-            imm = {20{instr[31]}, instr[31:25], instr[11:7]};
+            imm = {{20{instr[31]}}, instr[31:25], instr[11:7]};
         end
 
         `BRANCH: begin
             rs1 = instr[19:15];
             rs2 = instr[24:20];
-            imm = {19{instr[31]}, instr[31], instr[7], instr[30 : 25], instr[11:8], 1'b0};
+            imm = {{19{instr[31]}}, instr[31], instr[7], instr[30 : 25], instr[11:8], 1'b0};
         end
 
         `JALR: begin
             rs1 = instr[19:15];
             rd  = instr[11 : 7];
-            imm = {20{instr[31]}, instr[31:21], 1'b0};
+            imm = {{20{instr[31]}}, instr[31:21], 1'b0};
         end
 
         `JAL: begin

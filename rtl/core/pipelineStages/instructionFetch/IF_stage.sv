@@ -21,9 +21,10 @@ module IF_stage
     parameter BITSIZE = 32
 )(
     input               clk,
-    input               resetn_i,
+    input               rstn_i,
+    input               flush_i,
     //IF-ID
-    input               notify_i,
+    input               ack_i,
     output              valid_o,
     output  [31:0]      instr_o,
     output  [31:0]      pc_o,
@@ -34,8 +35,15 @@ module IF_stage
     input               MEM_valid_i,
     //Branching
     input [31:0]        pc_i,
-    input               branch_taken_i
+    input               branch_i
 );
+
+logic read_n;
+logic read_q;
+logic incr_pc;
+logic [31:0] instr;
+logic [31:0] pc;
+logic [31:0] pc_q;
 
 // Data register, 2x32 bit + valid + mem_valid: instr, pc
 struct packed {
@@ -48,6 +56,10 @@ struct packed {
 assign MEM_read_o = read_q;
 assign MEM_addr_o = pc_q;
 
+assign valid_o = data_q.valid;
+assign instr_o = data_q.instr;
+assign pc_o = data_q.pc;
+
 always_comb
 begin
     data_n  = data_q;
@@ -58,7 +70,7 @@ begin
     // the next address
     if(MEM_valid_i && !data_q.mem_valid) begin
         read_n           = 1'b0;
-        instr            = instr_i;
+        instr            = MEM_data_i;
         pc               = pc_q;
         data_n.mem_valid = 1'b1;
     end else begin
@@ -70,7 +82,7 @@ begin
         data_n.valid = 1'b0;
 
     // If data is not valid or ack received, we wait for the
-    // memory to be valid.
+    // memory to be valid which we invalidate when reading
     if((!data_q.valid || ack_i) && data_q.mem_valid) begin
         data_n         = {1'b1, 1'b0, instr, pc};
         read_n         = 1'b1;

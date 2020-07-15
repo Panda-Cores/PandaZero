@@ -22,9 +22,10 @@ module ID_stage
 (
     input               clk,
     input               rstn_i,
+    input               flush_i,
     // Register file
-    input [4:0]         rs1a_o,         // rs1 address to register file
-    input [4:0]         rs2a_o,         // rs2 address to register file
+    output [4:0]        rs1a_o,         // rs1 address to register file
+    output [4:0]        rs2a_o,         // rs2 address to register file
     input [31:0]        rs1d_i,         // rs1 from register file
     input [31:0]        rs2d_i,         // rs2 from register file
     // IF <-> ID
@@ -35,18 +36,20 @@ module ID_stage
     // ID <-> EX
     input               ack_i,          // Data has been read by n. stage
     output              valid_o,        // Data is ready
-    output              instr_o,        // Instruction
-    output              pc_o,           // Program counter
+    output [31:0]       instr_o,        // Instruction
+    output [31:0]       pc_o,           // Program counter
     output [31:0]       rs1_o,          // Data rs1
     output [31:0]       rs2_o,          // Data rs2
     output [31:0]       imm_o,          // Immediate
     // WB <-> ID
-    input               rd_i            // Destination register of WB stage
+    input [4:0]         rd_i            // Destination register of WB stage
 );
 
 // Register lock to mitigate pipeline hazards
 logic [31:0]    reg_lock_n;
 logic [31:0]    reg_lock_q;
+
+logic [4:0] rd;
 
 // immediate value
 logic [31:0]    imm;

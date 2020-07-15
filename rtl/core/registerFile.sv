@@ -20,8 +20,8 @@ module registerFile
     output [31:0]     data_rs2_o
 );
 
-logic [31:0] registers_n [32];
-logic [31:0] registers_q [32];
+logic [31:0][31:0] registers_n;
+logic [31:0][31:0] registers_q;
 
 always_comb
 begin
@@ -35,7 +35,7 @@ begin
     data_rs2_o = registers_q[rs2];
 end
 
-always_ff @(posedge clk)
+always_ff @(posedge clk, negedge rstn_i)
     if(!rstn_i)
         registers_q <= 'b0;
     else
