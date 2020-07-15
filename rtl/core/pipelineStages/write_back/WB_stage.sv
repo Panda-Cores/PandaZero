@@ -39,6 +39,8 @@ module WB_stage
 
 assign data_o = data_i;
 
+// WB stage only needs to sync itself with previous stage
+// Writing is synchronous in register file.
 always_comb
 begin
     ack_o = 1'b0;
