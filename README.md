@@ -8,11 +8,12 @@ Features so far:
 * Branching instructions
 * Arithmetic integer instructions (add, sub, shift,...) both register-register and register-immediate
 * Memory controller
-* Theoretically, programs can now run!
+* Theoretically, programs can now run (Some instructions are missing, such as fence & fence_i)!
 
 Upcoming features (in order of priority):
 * Actual memory (currently a rough temporary implementation (which is crap!))
 * With new memory, most likely a IF & MEM stage rework
+* Exception raising on illegal instruction
 * Write and riscv programs to test current features extensively
 * L1 Instruction and data cache
 
