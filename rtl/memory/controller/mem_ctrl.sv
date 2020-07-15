@@ -88,6 +88,7 @@ begin
         IDLE: begin
             mem_valid = 1'b0;
             mem_write = 1'b0;
+            acc_done[ii] = 1'b0;
             // Prefer write over read
             if(acc_write_i != '0)
             begin

@@ -65,8 +65,8 @@ logic                           inv_instr;
 
 
 //EX-MEM
-logic                           EX_MEM_give;
-logic                           MEM_EX_get;
+logic                           EX_MEM_valid;
+logic                           MEM_EX_ack;
 logic [31 : 0]                  EX_MEM_instr;
 logic [BITSIZE - 1 : 0]         EX_MEM_result;
 logic [BITSIZE - 1 : 0]         EX_MEM_rs2;
@@ -84,8 +84,8 @@ logic [BITSIZE - 1 : 0]         MEM_MEM_data_i;
 logic [BITSIZE - 1 : 0]         MEM_MEM_data_o;
 
 //MEM-WB
-logic                           MEM_WB_give;
-logic                           WB_MEM_get;
+logic                           MEM_WB_valid;
+logic                           WB_MEM_ack;
 logic [31 : 0]                  MEM_WB_instr;
 logic [BITSIZE - 1 : 0]         MEM_WB_data;
 
@@ -122,19 +122,8 @@ assign MEM_read_o[1]                = IF_MEM_read;
 assign IF_MEM_valid                 = MEM_valid_i[1];
 
 // Flush pipeline in case of taken branch
-// TODO rework!!!
-always_ff@(posedge clk)
-begin
-    if(branch)
-    begin
-        flush_pipeline <= 1'b1;
-        EX_IF_pc <= EX_MEM_result;
-    end
-    else
-        flush_pipeline <= 1'b0;
-end
 
-assign flush = flush_pipeline;
+assign flush = branch;
 assign resetn = resetn_i;
 
 //WB->register file
@@ -174,7 +163,7 @@ IF_stage IF_i (
     .MEM_valid_i ( IF_MEM_valid  ),
     //Branching
     .branch_i    ( branch        ),
-    .pc_i        ( EX_IF_pc      )
+    .pc_i        ( EX_MEM_result )
 );
 
 ID_stage ID_i (
@@ -210,8 +199,8 @@ EX_stage EX_i (
     .rs1_i              (   ID_EX_rs1   ),
     .rs2_i              (   ID_EX_rs2   ),
     .imm_i              (   ID_EX_imm   ),
-    .ack_i              (   MEM_EX_get  ),
-    .valid_o            (   EX_MEM_give ),
+    .ack_i              (   MEM_EX_ack  ),
+    .valid_o            (   EX_MEM_valid ),
     .pc_o               (   EX_MEM_pc   ),
     .instr_o            (   EX_MEM_instr),
     .result_o           (   EX_MEM_result),
@@ -223,13 +212,13 @@ MEM_stage #(
     .BITSIZE            (   BITSIZE     )
 ) MEM_i (
     .clk                (   clk         ),
-    .resetn_i           (   resetn      ),
-    .EX_MEM_give_i      (   EX_MEM_give ),
-    .MEM_EX_get_o       (   MEM_EX_get  ),
-    .EX_MEM_pc_i        (   EX_MEM_pc   ),
-    .EX_MEM_instr_i     (   EX_MEM_instr),
-    .EX_MEM_result_i    (   EX_MEM_result),
-    .EX_MEM_rs2_i       (   EX_MEM_rs2  ),
+    .rstn_i           (   resetn      ),
+    .valid_i      (   EX_MEM_valid ),
+    .ack_o       (   MEM_EX_ack  ),
+    .pc_i        (   EX_MEM_pc   ),
+    .instr_i     (   EX_MEM_instr),
+    .result_i    (   EX_MEM_result),
+    .rs2_i       (   EX_MEM_rs2  ),
     .MEM_addr_o         (   MEM_MEM_addr),
     .MEM_data_i         (   MEM_MEM_data_i),
     .MEM_data_o         (   MEM_MEM_data_o),
@@ -237,23 +226,22 @@ MEM_stage #(
     .MEM_write_size_o(MEM_MEM_write_size),
     .MEM_read_o         (   MEM_MEM_read ),
     .MEM_valid_i        (   MEM_MEM_valid),
-    .WB_MEM_get_i       (   WB_MEM_get  ),
-    .MEM_WB_give_o      (   MEM_WB_give ),
-    .MEM_WB_instr_o     (   MEM_WB_instr),
-    .MEM_WB_data_o      (   MEM_WB_data )
+    .ack_i       (   WB_MEM_ack  ),
+    .valid_o      (   MEM_WB_valid ),
+    .instr_o     (   MEM_WB_instr),
+    .data_o      (   MEM_WB_data )
 );
 
 WB_stage #(
     .BITSIZE            (   BITSIZE     )
 ) WB_i (
     .clk                (   clk         ),
-    .resetn_i           (   resetn      ),
-    .WB_MEM_get_o       (   WB_MEM_get  ),
-    .MEM_WB_give_i      (   MEM_WB_give ),
-    .MEM_WB_instruction_i(  MEM_WB_instr),
-    .MEM_WB_data_i      (   MEM_WB_data ),
-    .WB_REG_rd_o        (   WB_REG_rd   ),
-    .WB_REG_d_o         (   WB_REG_d    ),
-    .WB_REG_access_o    (   REG_mux     )
+    .rstn_i           (   resetn      ),
+    .ack_o       (   WB_MEM_ack  ),
+    .valid_i      (   MEM_WB_valid ),
+    .instr_i(  MEM_WB_instr),
+    .data_i      (   MEM_WB_data ),
+    .rd_o        (   WB_REG_rd   ),
+    .data_o         (   WB_REG_d    )
 );
 endmodule

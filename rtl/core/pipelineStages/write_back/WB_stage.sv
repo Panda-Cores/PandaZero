@@ -1,10 +1,23 @@
-// ---------------RISCV-Luca---------------
+// ------------------------ Disclaimer -----------------------
+// No warranty of correctness, synthesizability or 
+// functionality of this code is given.
+// Use this code under your own risk.
+// When using this code, copy this disclaimer at the top of 
+// Your file
+//
+// (c) Luca Hanel 2020
+//
+// ------------------------------------------------------------
+//
+// Module name: WB_stage
 // 
-// Module:          writeBack
-// 
-// Functionality:   Pipeline Stage WriteBack
-// 
-// -------------(c) Luca Hanel-------------
+// Functionality: Writeback stage of pipelined processor. Writes
+//                results back into the register file.
+//                Destination register is used by ID stage to 
+//                unlock registers (used for stalling)
+//
+// ------------------------------------------------------------
+
 
 `include "instructions.sv"
 
@@ -13,83 +26,32 @@ module WB_stage
     BITSIZE
 )(
     input                       clk,
-    input                       resetn_i,
+    input                       rstn_i,
     //MEM-WB
-    output                      WB_MEM_get_o,
-    input                       MEM_WB_give_i,
-    input [31 : 0]              MEM_WB_instruction_i,
-    input [BITSIZE - 1 : 0]     MEM_WB_data_i,
+    output                      ack_o,
+    input                       valid_i,
+    input [31 : 0]              instr_i,
+    input [BITSIZE - 1 : 0]     data_i,
     //WB-REG
-    output [4:0]                WB_REG_rd_o,
-    output [BITSIZE - 1 : 0]    WB_REG_d_o,
-    output                      WB_REG_access_o
+    output [4:0]                rd_o,
+    output [BITSIZE - 1 : 0]    data_o
 );
 
-enum {GET_INSTR, WB_INSTR} CS, NS;
-
-logic [31 : 0]                                  WB_instruction;
-
-logic [BITSIZE - 1 : 0]                         WB_d;
-    /* verilator lint_off UNOPTFLAT */
-logic [4 : 0]                                   WB_REG_rd;
-    /* verilator lint_on UNOPTFLAT */
-
-logic                                           WB_MEM_get;
-    /* verilator lint_off UNOPTFLAT */
-logic                                           WB_REG_access;
-    /* verilator lint_on UNOPTFLAT */
-
-assign WB_REG_rd_o = WB_REG_rd;
-assign WB_REG_d_o = WB_d;
-
-assign WB_MEM_get_o = WB_MEM_get;
-assign WB_REG_access_o = WB_REG_access;
-
-always_ff@(posedge clk)
-begin
-    if(!resetn_i)
-    begin
-       CS <= GET_INSTR; 
-    end
-    begin
-        CS <= NS;
-    end
-end
+assign data_o = data_i;
 
 always_comb
 begin
-    WB_MEM_get     = 1'b0;
-    WB_REG_access  = 1'b1;
-    WB_REG_rd = 'b0;
-    case(CS)
-        GET_INSTR: begin
-            WB_MEM_get = 1'b1;
-            if(MEM_WB_give_i)
-            begin
-                WB_instruction  = MEM_WB_instruction_i;
-                WB_d            = MEM_WB_data_i;
-                NS              = WB_INSTR;
-            end
-        end
+    ack_o = 1'b0;
 
-        WB_INSTR: begin
-            case(WB_instruction[6:0])
-                `LUI, `IMM_REG_ALU, `REG_REG_ALU, `LOAD, `JAL, `JALR, `AUIPC: begin
-                    if(WB_instruction[11 : 7] != 'b0) begin
-                        WB_REG_rd = WB_instruction[11 : 7];
-                        WB_REG_access = 1'b0;
-                    end
-                end
-                default:
-                    WB_REG_rd = 'b0;
-            endcase
-            
-            NS = GET_INSTR;
-        end
+    case(instr_i[6:0])
+        `LUI, `IMM_REG_ALU, `REG_REG_ALU, `LOAD, `JAL, `JALR, `AUIPC: 
+            rd_o = instr_i[11 : 7];
 
-        default: begin
-        end
+        default:
+            rd_o = 'b0;
     endcase
-    
+
+    if(valid_i)
+        ack_o   = 1'b1;
 end
 endmodule

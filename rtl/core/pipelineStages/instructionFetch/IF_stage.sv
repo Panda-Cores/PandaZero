@@ -82,6 +82,7 @@ begin
 
     // If data is not valid or ack received, we wait for the
     // memory to be valid which we invalidate when reading
+    // (the 1'b0 in data_n assignment)
     if((!data_q.valid || ack_i) && data_q.mem_valid) begin
         data_n         = {1'b1, 1'b0, instr_q, pc_q};
         read_n         = 1'b1;

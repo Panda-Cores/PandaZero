@@ -20,15 +20,16 @@ module registerFile
     output [31:0]     data_rs2_o
 );
 
-logic [31:0][31:0] registers_n;
-logic [31:0][31:0] registers_q;
+logic [31:0] registers_n[31];
+logic [31:0] registers_q[31];
 
 always_comb
 begin
     registers_n = registers_q;
 
     // Write
-    registers_n[rd] = data_rd_i;
+    if(rd != 'b0)
+        registers_n[rd] = data_rd_i;
 
     // Read
     data_rs1_o = registers_q[rs1];
@@ -37,7 +38,8 @@ end
 
 always_ff @(posedge clk, negedge rstn_i)
     if(!rstn_i)
-        registers_q <= 'b0;
+        for(int i = 0; i < 32; i = i + 1)
+            registers_q[i] <= 'b0;
     else
         registers_q <= registers_n;
 endmodule
