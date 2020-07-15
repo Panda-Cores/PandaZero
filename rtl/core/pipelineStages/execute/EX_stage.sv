@@ -21,14 +21,14 @@ module EX_stage
     parameter BITSIZE
 )(
     input                   clk,
-    input                   resetn_i,    
+    input                   rstn_i,    
     //ID-EX
     input                   valid_i,
     output                  notify_o,
     input [31 : 0]          instr_i,
     input [31:0]            pc_i,
-    input [31:0]            rs1d_i,
-    input [31:0]            rs2d_i,
+    input [31:0]            rs1_i,
+    input [31:0]            rs2_i,
     input [31:0]            imm_i,
     //EX-MEM
     input                   notify_i,
@@ -37,48 +37,66 @@ module EX_stage
     output [31:0]           instr_o,
     output [31:0]           result_o,
     output [31:0]           rs2_o,
-    output                  branch_taken_o
+    output                  branch_o
 );
+
+// Data register, 4x32 bit + valid + branch: instr, pc, result, rs2
+struct packed {
+    logic           valid;
+    logic           branch;
+    logic [31:0]    instr;
+    logic [31:0]    pc;
+    logic [31:0]    result;
+    logic [31:0]    rs2;
+} data_n, data_q;
+
+logic [31:0]        result;
 
 executer executer_i (
-    .instr        ( instr_q         ),
-    .pc           ( pc_q            ),
-    .rs1          ( rs1_q           ),
-    .rs2          ( rs2_q           ),
-    .imm          ( imm_q           ),
-    .result       ( result_o        ),
-    .branch_taken ( branch_taken_o  )
+    .instr        ( instr_i ),
+    .pc           ( pc_i    ),
+    .rs1          ( rs1_i   ),
+    .rs2          ( rs2_i   ),
+    .imm          ( imm_i   ),
+    .result       ( result  ),
+    .branch_taken ( branch  )
 );
 
-assign valid_o  = ~empty;
-assign pc_o     = pc_q;
-assign rs2_o    = rs2_q;
-assign instr_o  = instr_q;
+assign valid_o  = data_q.valid;
+assign instr_o  = data_q.instr;
+assign pc_o     = data_q.pc;
+assign result_o = data_q.result;
+assign rs2_o    = data_q.rs2;
+assign branch_o = data_q.branch;
 
-always_ff @(posedge clk, negedge resetn_i)
+always_comb
 begin
-    if(!resetn_i) begin
-        empty <= 1'b1;
-        notify_o <= 1'b0;
+    data_n = data_q;
+    ack_o   = 1'b0;
+
+    // Data is no longer valid if we recieved and ack
+    if(ack_i)
+        data_n.valid = 1'b0;
+
+    // If data is not valid or ack received, we wait for the
+    // previous stage to be valid. If this is the case, we set our
+    // data and set valid=1
+    if((!data_q.valid || ack_i) && valid_i) begin
+        ack_o          = 1'b1;
+        data_n         = {1'b1, branch, instr_i, pc_i, result, rs2_i};
     end
-    else begin
-        if(notify_i || empty) begin
-            if(valid_i) begin
-                instr_q  <= instr_i;
-                pc_q     <= pc_i;
-                rs1_q    <= rs1_i;
-                rs2_q    <= rs2_i;
-                imm_q    <= imm_i;
-                notify_o <= 1'b1;
-                empty    <= 1'b0;
-            end
-            else begin
-                notify_o <= 1'b0;
-                empty    <= 1'b1;
-            end
-        end else begin
-            notify_o <= 1'b0;
-        end
+
+    // Invalidate if flush
+    if(flush_i)
+        data_n.valid = 1'b0;
+end
+
+always_ff @(posedge clk, negedge rstn_i)
+begin
+    if(!rstn_i) begin
+        data_q     <= 'b0;
+    end else begin
+        data_q     <= data_n;
     end
 end
 

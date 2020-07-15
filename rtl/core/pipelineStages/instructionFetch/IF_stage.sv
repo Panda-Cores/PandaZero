@@ -37,42 +37,67 @@ module IF_stage
     input               branch_taken_i
 );
 
-logic [31:0]    pc_n;
-logic           empty;
+// Data register, 2x32 bit + valid + mem_valid: instr, pc
+struct packed {
+    logic           valid;
+    logic           mem_valid;
+    logic [31:0]    instr;
+    logic [31:0]    pc;
+} data_n, data_q;
 
-assign MEM_addr_o = pc_n;
+assign MEM_read_o = read_q;
+assign MEM_addr_o = pc_q;
 
-always_ff @(posedge clk, negedge resetn_i)
+always_comb
 begin
-    // In case of reset or branch taken,
-    // reset the pc and set stage to empty
-    if(!resetn_i) begin
-        pc_q  <= 'b0;
-        empty <= 1'b1;
+    data_n  = data_q;
+    incr_pc = 1'b0;
+    read_n  = read_q;
+
+    // Latch the incoming data and directly read
+    // the next address
+    if(MEM_valid_i && !data_q.mem_valid) begin
+        read_n           = 1'b0;
+        instr            = instr_i;
+        pc               = pc_q;
+        data_n.mem_valid = 1'b1;
+    end else begin
+        read_n           = 1'b1;
     end
-    else if(branch_taken_i) begin
-        MEM_read_o <= 1'b1;
-        pc_q  <= pc_i;
-        empty <= 1'b1;
+
+    // Data is no longer valid if we recieved and ack
+    if(ack_i)
+        data_n.valid = 1'b0;
+
+    // If data is not valid or ack received, we wait for the
+    // memory to be valid.
+    if((!data_q.valid || ack_i) && data_q.mem_valid) begin
+        data_n         = {1'b1, 1'b0, instr, pc};
+        read_n         = 1'b1;
     end
-    else begin
-        if(notify_i || empty) begin
-            // Else read data from memory
-            if(MEM_valid_i) begin
-                instr_o     <= MEM_data_i;
-                pc_o        <= pc_n;
-                pc_n        <= pc_n + 4;
-                valid_o     <= 1'b1;
-                MEM_read_o  <= 1'b0;
-                empty       <= 1'b0;
-            end
-            else begin
-                MEM_read_o  <= 1'b1;
-                empty       <= 1'b1;
-            end
-        end else begin
-            MEM_read_o <= 1'b0;
-        end
+
+    // Invalidate if flush and use the provided pc
+    if(flush_i) begin
+        data_n.valid     = 1'b0;
+        data_n.mem_valid = 1'b0;
+        incr_pc          = 1'b0;
+        read_n           = 1'b1;
     end
 end
+
+always_ff @(posedge clk, negedge rstn_i)
+begin
+    if(!rstn_i) begin
+        data_q <= 'b0;
+        read_q <= 'b1;
+    end else begin
+        data_q <= data_n;
+        read_q <= read_n;
+        if(branch_i)
+            pc_q <= pc_i;
+        else if(incr_pc)
+            pc_q <= pc_q + 4;
+    end
+end
+
 endmodule
