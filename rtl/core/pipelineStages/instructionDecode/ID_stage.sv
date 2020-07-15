@@ -81,6 +81,8 @@ assign rs1_o   = data_q.rs1;
 assign rs2_o   = data_q.rs2;
 assign imm_o   = data_q.imm;
 
+assign reg_lock_n[0] = 1'b0;
+
 always_comb
 begin
     data_n = data_q;
@@ -100,7 +102,7 @@ begin
     if((!data_q.valid || ack_i) && valid_i) begin
         // If the destination register is locked, stall
         // Else lock the register (bypass if rd=0)
-        if(!reg_lock_q[rd] || rd == 'b0) begin
+        if(!reg_lock_q[rs1a_o] && !reg_lock_q[rs2a_o]) begin
             ack_o          = 1'b1;
             data_n         = {1'b1, instr_i, pc_i, rs1d_i, rs2d_i, imm};
             reg_lock_n[rd] = 1'b1;

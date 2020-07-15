@@ -16,10 +16,7 @@
 //
 // ------------------------------------------------------------
 
-module IF_stage
-#(
-    parameter BITSIZE = 32
-)(
+module IF_stage (
     input               clk,
     input               rstn_i,
     input               flush_i,
@@ -41,9 +38,11 @@ module IF_stage
 logic read_n;
 logic read_q;
 logic incr_pc;
-logic [31:0] instr;
-logic [31:0] pc;
+logic [31:0] instr_n;
+logic [31:0] instr_q;
+logic [31:0] pc_n;
 logic [31:0] pc_q;
+logic [31:0] pc_oq;
 
 // Data register, 2x32 bit + valid + mem_valid: instr, pc
 struct packed {
@@ -54,7 +53,7 @@ struct packed {
 } data_n, data_q;
 
 assign MEM_read_o = read_q;
-assign MEM_addr_o = pc_q;
+assign MEM_addr_o = pc_oq;
 
 assign valid_o = data_q.valid;
 assign instr_o = data_q.instr;
@@ -68,10 +67,10 @@ begin
 
     // Latch the incoming data and directly read
     // the next address
-    if(MEM_valid_i && !data_q.mem_valid) begin
-        read_n           = 1'b0;
-        instr            = MEM_data_i;
-        pc               = pc_q;
+    if(MEM_valid_i && (!data_q.mem_valid || ack_i)) begin
+        instr_n          = MEM_data_i;
+        pc_n             = pc_oq;
+        incr_pc          = 1'b1;
         data_n.mem_valid = 1'b1;
     end else begin
         read_n           = 1'b1;
@@ -84,7 +83,7 @@ begin
     // If data is not valid or ack received, we wait for the
     // memory to be valid which we invalidate when reading
     if((!data_q.valid || ack_i) && data_q.mem_valid) begin
-        data_n         = {1'b1, 1'b0, instr, pc};
+        data_n         = {1'b1, 1'b0, instr_q, pc_q};
         read_n         = 1'b1;
     end
 
@@ -93,7 +92,6 @@ begin
         data_n.valid     = 1'b0;
         data_n.mem_valid = 1'b0;
         incr_pc          = 1'b0;
-        read_n           = 1'b1;
     end
 end
 
@@ -105,10 +103,12 @@ begin
     end else begin
         data_q <= data_n;
         read_q <= read_n;
+        instr_q <= instr_n;
+        pc_q <= pc_n;
         if(branch_i)
-            pc_q <= pc_i;
+            pc_oq <= pc_i;
         else if(incr_pc)
-            pc_q <= pc_q + 4;
+            pc_oq <= pc_oq + 4;
     end
 end
 

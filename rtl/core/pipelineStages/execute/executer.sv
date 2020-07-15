@@ -46,6 +46,7 @@ always_comb
 begin
     alu_d1_mux      = 1'b0;
     alu_d0_mux      = 1'b0;
+    branch_taken    = 1'b0;
 
     case(instr[6:0])
         `LUI, `LOAD, `STORE: begin

@@ -87,8 +87,10 @@ begin
     end
 
     // Invalidate if flush
-    if(flush_i)
+    if(flush_i) begin
         data_n.valid = 1'b0;
+        data_n.branch = 1'b0;
+    end
 end
 
 always_ff @(posedge clk, negedge rstn_i)
