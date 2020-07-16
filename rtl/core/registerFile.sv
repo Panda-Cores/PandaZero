@@ -1,15 +1,22 @@
-// ---------------RISCV-Luca---------------
+// ------------------------ Disclaimer -----------------------
+// No warranty of correctness, synthesizability or 
+// functionality of this code is given.
+// Use this code under your own risk.
+// When using this code, copy this disclaimer at the top of 
+// Your file
+//
+// (c) Luca Hanel 2020
+//
+// ------------------------------------------------------------
+//
+// Module name: register file
 // 
-// Module:          RegsiterFile
-// 
-// Functionality:   register file
-// 
-// -------------(c) Luca Hanel-------------
+// Functionality: Register file of the core
+//
+// ------------------------------------------------------------
 
-module registerFile
-#(
-    parameter BITSIZE = 32
-)(
+
+module registerFile (
     input logic         clk,
     input logic         rstn_i,
     input logic [4:0]   rd,
