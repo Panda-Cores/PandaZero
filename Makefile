@@ -17,7 +17,7 @@ impl:
 
 sim:
 	make -C sim_verilator
-	gtkwave sim_verilator/logs/vlt_dump.vcd
+	gtkwave -f sim_verilator/logs/vlt_dump.vcd -a sim_verilator/common/waves.gtkw
 
 clean:
 	make -C impl clean

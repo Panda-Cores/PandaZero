@@ -24,6 +24,7 @@
 module WB_stage (
     input logic         clk,
     input logic         rstn_i,
+    input logic         halt_i,
     //MEM-WB
     output logic        ack_o,
     input logic         valid_i,
@@ -34,23 +35,41 @@ module WB_stage (
     output logic [31:0] data_o
 );
 
-assign data_o = data_i;
+struct packed {
+    logic [4:0]     rd;
+    logic [31:0]    data;
+} data_n, data_q;
 
-// WB stage only needs to sync itself with previous stage
-// Writing is synchronous in register file.
+
+assign data_o = data_q.data;
+assign rd_o   = data_q.rd;
+
 always_comb
 begin
     ack_o = 1'b0;
+    data_n = data_q;
 
-    case(instr_i[6:0])
-        `LUI, `IMM_REG_ALU, `REG_REG_ALU, `LOAD, `JAL, `JALR, `AUIPC: 
-            rd_o = instr_i[11 : 7];
+    if(valid_i) begin
+        ack_o        = 1'b1;
+        case(instr_i[6:0])
+            `LUI, `IMM_REG_ALU, `REG_REG_ALU, `LOAD, `JAL, `JALR, `AUIPC: begin
+                data_n.rd = instr_i[11 : 7];
+                data_n.data = data_i;
+            end
+            default:
+                data_n.rd = 'b0;
+        endcase
+    end else begin
+        data_n.rd = 'b0;
+    end
+end
 
-        default:
-            rd_o = 'b0;
-    endcase
-
-    if(valid_i)
-        ack_o   = 1'b1;
+always_ff @(posedge clk, negedge rstn_i)
+begin
+    if(!rstn_i) begin
+        data_q <= 'b0;
+    end else if(!halt_i) begin
+        data_q <= data_n;
+    end
 end
 endmodule

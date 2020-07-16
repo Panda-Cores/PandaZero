@@ -21,6 +21,7 @@ module core_wrapper
 (
     input wire          clk,
     input wire          rstn_i,
+    input wire          halt_core_i,
     output wire         rst_o
 );
 
@@ -43,6 +44,7 @@ core_top core_i
 (
     .clk        ( clk          ),
     .rstn_i     ( rstn_i       ),
+    .halt_core_i( halt_core_i  ),
     .rst_reqn_o ( rst_reqn     ),
     .IF_en_o    ( IF_en        ),
     .IF_write_o ( IF_write     ),

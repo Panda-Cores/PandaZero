@@ -26,6 +26,7 @@ module MEM_stage
 )(
     input logic         clk,
     input logic         rstn_i,
+    input logic         halt_i,
     //EX-MEM
     input logic         valid_i,
     output logic        ack_o,
@@ -67,15 +68,30 @@ begin
     MEM_en_o = 1'b0;
     MEM_write_o = 'b0;
 
+    // Data is no longer valid if we recieved and ack
+    if(ack_i)
+        data_n.valid = 1'b0;
+
     case(instr_i[6:0])
         // In case of LOAD or STORE, we give the respective signal
         // to the memory and wait for the next stage to ack
         `LOAD: begin
             if((!data_q.valid || ack_i) && valid_i) begin
                 ack_o          = 1'b1;
-                data_n         = {1'b1, instr_i, MEM_data_i};
-            end else
-                MEM_en_o = 1'b1;
+                data_n.valid   = 1'b1;
+                data_n.instr   = instr_i;
+                case(instr_i[13:12])
+                    2'b00:
+                        data_n.data = {{24{MEM_data_i[7]}}, MEM_data_i[7:0]};
+                    2'b01:
+                        data_n.data = {{16{MEM_data_i[15]}}, MEM_data_i[15:0]};
+                    2'b10:
+                        data_n.data = MEM_data_i;
+                    default: begin
+                    end
+                endcase
+            end
+            MEM_en_o = 1'b1;
         end
 
         // In case of LOAD or STORE, we give the respective signal
@@ -84,12 +100,22 @@ begin
             if((!data_q.valid || ack_i) && valid_i)begin
                 ack_o          = 1'b1;
                 data_n         = {1'b1, instr_i, MEM_data_i};
-            end else begin
-                // TODO correct write enable
+                MEM_en_o       = 1'b1;
                 MEM_write_o = 'b1111;
-                MEM_en_o = 1'b0;
+                MEM_en_o    = 1'b1;
             end
-            
+            // Write the correct amount of bytes
+            case(instr_i[13:12])
+                2'b00:
+                    MEM_write_o = 4'b0001;
+                2'b01:
+                    MEM_write_o = 4'b0011;
+                2'b10:
+                    MEM_write_o = 4'b1111;
+                default: begin
+                end
+            endcase
+            MEM_en_o    = 1'b1;            
         end
 
         // In case of these, we can directly give the data to the
@@ -115,16 +141,12 @@ begin
             end
         end
     endcase
-
-    // Data is no longer valid if we recieved and ack
-    if(ack_i)
-        data_n.valid = 1'b0;
 end
 
 always_ff @(posedge clk, negedge rstn_i) begin
     if(!rstn_i) begin
         data_q <= 'b0;
-    end else begin
+    end else if(!halt_i) begin
         data_q <= data_n;
     end
 end

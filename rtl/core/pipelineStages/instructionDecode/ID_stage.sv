@@ -23,6 +23,7 @@ module ID_stage
     input logic         clk,
     input logic         rstn_i,
     input logic         flush_i,
+    input logic         halt_i,
     // Register file
     output logic [4:0]  rs1a_o,         // rs1 address to register file
     output logic [4:0]  rs2a_o,         // rs2 address to register file
@@ -102,18 +103,14 @@ begin
     if((!data_q.valid || ack_i) && valid_i) begin
         // If the destination register is locked, stall
         // Else lock the register (bypass if rd=0)
-        if(!reg_lock_q[rs1a_o] && !reg_lock_q[rs2a_o]) begin
+
+        // TODO Temporary exception on invalid instruction:
+        // Core just stops
+        if(!reg_lock_q[rs1a_o] && !reg_lock_q[rs2a_o] && ! invalid) begin
             ack_o          = 1'b1;
             data_n         = {1'b1, instr_i, pc_i, rs1d_i, rs2d_i, imm};
             reg_lock_n[rd] = 1'b1;
         end
-    end
-
-    // TODO Temporary exception on invalid instruction:
-    // Core just stops
-    if(valid_i && invalid) begin
-        data_n.valid = 1'b0;
-        ack_o        = 1'b0;
     end
 
     // Invalidate if flush
@@ -129,7 +126,7 @@ begin
     if(!rstn_i) begin
         data_q     <= 'b0;
         reg_lock_q <= 'b0;
-    end else begin
+    end else if(!halt_i) begin
         data_q     <= data_n;
         reg_lock_q <= reg_lock_n;
     end

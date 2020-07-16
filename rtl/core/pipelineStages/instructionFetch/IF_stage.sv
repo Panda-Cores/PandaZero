@@ -20,6 +20,7 @@ module IF_stage (
     input logic          clk,
     input logic          rstn_i,
     input logic          flush_i,
+    input logic          halt_i,
     //IF-ID
     input logic          ack_i,
     output logic         valid_o,
@@ -73,7 +74,7 @@ always_ff @(posedge clk, negedge rstn_i)
 begin
     if(!rstn_i) begin
         data_q <= 'b0;
-    end else begin
+    end else if(!halt_i) begin
         data_q <= data_n;
 
         if(branch_i || flush_i)

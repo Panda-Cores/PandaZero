@@ -1,23 +1,72 @@
 [*]
-[*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
-[*] Thu Jul 16 10:41:02 2020
+[*] GTKWave Analyzer v3.3.98 (w)1999-2019 BSI
+[*] Thu Jul 16 16:54:36 2020
 [*]
-[dumpfile] "/home/luca/RVMicroController/sim_verilator/logs/vlt_dump.vcd"
-[dumpfile_mtime] "Thu Jul 16 10:40:21 2020"
-[dumpfile_size] 5301252
-[savefile] "/home/luca/RVMicroController/sim_verilator/common/waves.gtkw"
+[dumpfile] "/home/luca/projects/RVMicroController/sim_verilator/logs/vlt_dump.vcd"
+[dumpfile_mtime] "Thu Jul 16 16:47:48 2020"
+[dumpfile_size] 229100
+[savefile] "/home/luca/projects/RVMicroController/sim_verilator/common/waves.gtkw"
 [timestart] 0
-[size] 1916 951
-[pos] -1 -1
-*0.000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[size] 1890 963
+[pos] -1 21
+*-6.000000 183 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] TOP.
-[treeopen] TOP.riscv_top.
-[treeopen] TOP.riscv_top.core_top_i.
-[sst_width] 214
-[signals_width] 190
+[treeopen] TOP.core_wrapper.
+[sst_width] 196
+[signals_width] 128
 [sst_expanded] 1
-[sst_vpaned_height] 275
+[sst_vpaned_height] 283
 @22
-TOP.riscv_top.core_top_i.registerFile_i.registers_n(2)[31:0]
+TOP.core_wrapper.ram_i.SIZE[31:0]
+TOP.core_wrapper.ram_i.addra[31:0]
+TOP.core_wrapper.ram_i.addra_i[31:0]
+TOP.core_wrapper.ram_i.addrb[31:0]
+TOP.core_wrapper.ram_i.addrb_i[31:0]
+@28
+TOP.core_wrapper.ram_i.clk
+@22
+TOP.core_wrapper.ram_i.data(0)[31:0]
+TOP.core_wrapper.ram_i.data(1)[31:0]
+TOP.core_wrapper.ram_i.data(2)[31:0]
+TOP.core_wrapper.ram_i.data(3)[31:0]
+TOP.core_wrapper.ram_i.data(4)[31:0]
+TOP.core_wrapper.ram_i.data(5)[31:0]
+TOP.core_wrapper.ram_i.data(6)[31:0]
+TOP.core_wrapper.ram_i.data(7)[31:0]
+TOP.core_wrapper.ram_i.data(8)[31:0]
+TOP.core_wrapper.ram_i.data(9)[31:0]
+TOP.core_wrapper.ram_i.data(10)[31:0]
+TOP.core_wrapper.ram_i.data(11)[31:0]
+TOP.core_wrapper.ram_i.data(12)[31:0]
+TOP.core_wrapper.ram_i.data(13)[31:0]
+TOP.core_wrapper.ram_i.data(14)[31:0]
+TOP.core_wrapper.ram_i.data(15)[31:0]
+TOP.core_wrapper.ram_i.data(16)[31:0]
+TOP.core_wrapper.ram_i.data(17)[31:0]
+TOP.core_wrapper.ram_i.data(18)[31:0]
+TOP.core_wrapper.ram_i.data(19)[31:0]
+TOP.core_wrapper.ram_i.data(20)[31:0]
+TOP.core_wrapper.ram_i.data(21)[31:0]
+TOP.core_wrapper.ram_i.data(22)[31:0]
+TOP.core_wrapper.ram_i.data(23)[31:0]
+TOP.core_wrapper.ram_i.data(24)[31:0]
+TOP.core_wrapper.ram_i.data(25)[31:0]
+TOP.core_wrapper.ram_i.data(26)[31:0]
+TOP.core_wrapper.ram_i.data(27)[31:0]
+TOP.core_wrapper.ram_i.data(28)[31:0]
+TOP.core_wrapper.ram_i.data(29)[31:0]
+TOP.core_wrapper.ram_i.data(30)[31:0]
+TOP.core_wrapper.ram_i.data(31)[31:0]
+TOP.core_wrapper.ram_i.dinb_i[31:0]
+TOP.core_wrapper.ram_i.douta_o[31:0]
+TOP.core_wrapper.ram_i.doutb_o[31:0]
+@28
+TOP.core_wrapper.ram_i.ena_i
+@29
+TOP.core_wrapper.ram_i.enb_i
+@28
+TOP.core_wrapper.ram_i.rstn_i
+@22
+TOP.core_wrapper.ram_i.web_i[3:0]
 [pattern_trace] 1
 [pattern_trace] 0

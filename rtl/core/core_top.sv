@@ -24,6 +24,7 @@ module core_top (
     input logic          clk,
     input logic          rstn_i,
     output logic         rst_reqn_o,
+    input logic          halt_core_i,
 // IF-Memory
     output logic [31:0]  IF_addr_o,
     output logic         IF_en_o,
@@ -107,6 +108,7 @@ IF_stage IF_i (
     .clk         ( clk           ),
     .rstn_i      ( rstn_i        ),
     .flush_i     ( flush         ),
+    .halt_i      ( halt_core_i   ),
     .ack_i       ( ID_IF_ack     ),
     .valid_o     ( IF_ID_valid   ),
     .instr_o     ( IF_ID_instr   ),
@@ -122,8 +124,9 @@ IF_stage IF_i (
 
 ID_stage ID_i (
     .clk      ( clk          ),
-    .rstn_i   ( rstn_i     ),
+    .rstn_i   ( rstn_i       ),
     .flush_i  ( flush        ),
+    .halt_i   ( halt_core_i  ),
     .valid_i  ( IF_ID_valid  ),
     .ack_o    ( ID_IF_ack    ),
     .instr_i  ( IF_ID_instr  ),
@@ -144,8 +147,9 @@ ID_stage ID_i (
 
 EX_stage EX_i (
     .clk      ( clk           ),
-    .rstn_i   ( rstn_i      ),
+    .rstn_i   ( rstn_i        ),
     .flush_i  ( flush         ),
+    .halt_i   ( halt_core_i   ),
     .valid_i  ( ID_EX_valid   ),
     .ack_o    ( EX_ID_ack     ),
     .instr_i  ( ID_EX_instr   ),
@@ -165,6 +169,7 @@ EX_stage EX_i (
 MEM_stage MEM_i (
     .clk         ( clk           ),
     .rstn_i      ( rstn_i        ),
+    .halt_i      ( halt_core_i   ),
     .valid_i     ( EX_MEM_valid  ),
     .ack_o       ( MEM_EX_ack    ),
     .pc_i        ( EX_MEM_pc     ),
@@ -185,6 +190,7 @@ MEM_stage MEM_i (
 WB_stage WB_i (
     .clk     ( clk          ),
     .rstn_i  ( rstn_i       ),
+    .halt_i  ( halt_core_i   ),
     .ack_o   ( WB_MEM_ack   ),
     .valid_i ( MEM_WB_valid ),
     .instr_i ( MEM_WB_instr ),

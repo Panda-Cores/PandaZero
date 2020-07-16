@@ -20,6 +20,7 @@ module EX_stage(
     input logic         clk,
     input logic         rstn_i,  
     input logic         flush_i,  
+    input logic         halt_i,
     //ID-EX
     input logic         valid_i,
     output logic        ack_o,
@@ -62,7 +63,7 @@ executer executer_i (
     .branch_taken ( branch  )
 );
 
-assign valid_o  = data_q.valid;
+assign valid_o  = (flush_i) ? 1'b0 : data_q.valid;
 assign instr_o  = data_q.instr;
 assign pc_o     = data_q.pc;
 assign result_o = data_q.result;
@@ -87,7 +88,7 @@ begin
     end
 
     // Invalidate if flush
-    if(flush_i || branch) begin
+    if(flush_i) begin
         data_n.valid = 1'b0;
         data_n.branch = 1'b0;
     end
@@ -97,7 +98,7 @@ always_ff @(posedge clk, negedge rstn_i)
 begin
     if(!rstn_i) begin
         data_q     <= 'b0;
-    end else begin
+    end else if(!halt_i) begin
         data_q     <= data_n;
     end
 end
