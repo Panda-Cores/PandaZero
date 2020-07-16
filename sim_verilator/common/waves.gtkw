@@ -1,0 +1,23 @@
+[*]
+[*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
+[*] Thu Jul 16 10:41:02 2020
+[*]
+[dumpfile] "/home/luca/RVMicroController/sim_verilator/logs/vlt_dump.vcd"
+[dumpfile_mtime] "Thu Jul 16 10:40:21 2020"
+[dumpfile_size] 5301252
+[savefile] "/home/luca/RVMicroController/sim_verilator/common/waves.gtkw"
+[timestart] 0
+[size] 1916 951
+[pos] -1 -1
+*0.000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TOP.
+[treeopen] TOP.riscv_top.
+[treeopen] TOP.riscv_top.core_top_i.
+[sst_width] 214
+[signals_width] 190
+[sst_expanded] 1
+[sst_vpaned_height] 275
+@22
+TOP.riscv_top.core_top_i.registerFile_i.registers_n(2)[31:0]
+[pattern_trace] 1
+[pattern_trace] 0

@@ -17,25 +17,25 @@
 // ------------------------------------------------------------
 
 module EX_stage(
-    input                   clk,
-    input                   rstn_i,  
-    input                   flush_i,  
+    input logic         clk,
+    input logic         rstn_i,  
+    input logic         flush_i,  
     //ID-EX
-    input                   valid_i,
-    output                  ack_o,
-    input [31 : 0]          instr_i,
-    input [31:0]            pc_i,
-    input [31:0]            rs1_i,
-    input [31:0]            rs2_i,
-    input [31:0]            imm_i,
+    input logic         valid_i,
+    output logic        ack_o,
+    input logic [31:0]  instr_i,
+    input logic [31:0]  pc_i,
+    input logic [31:0]  rs1_i,
+    input logic [31:0]  rs2_i,
+    input logic [31:0]  imm_i,
     //EX-MEM
-    input                   ack_i,
-    output                  valid_o,
-    output [31:0]           pc_o,
-    output [31:0]           instr_o,
-    output [31:0]           result_o,
-    output [31:0]           rs2_o,
-    output                  branch_o
+    input logic         ack_i,
+    output logic        valid_o,
+    output logic [31:0] pc_o,
+    output logic [31:0] instr_o,
+    output logic [31:0] result_o,
+    output logic [31:0] rs2_o,
+    output logic        branch_o
 );
 
 // Data register, 4x32 bit + valid + branch: instr, pc, result, rs2
@@ -87,7 +87,7 @@ begin
     end
 
     // Invalidate if flush
-    if(flush_i) begin
+    if(flush_i || branch) begin
         data_n.valid = 1'b0;
         data_n.branch = 1'b0;
     end

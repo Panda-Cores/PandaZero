@@ -1,5 +1,5 @@
 #include <verilated.h>
-#include "Vriscv_top.h"
+#include "Vcore_top.h"
 
 #if VM_TRACE
 # include <verilated_vcd_c.h>
@@ -9,7 +9,7 @@ int main(int argc, char** argv, char** env) {
     Verilated::commandArgs(argc, argv);
     long r;
     int flags;
-    Vriscv_top* top = new Vriscv_top;
+    Vcore_top* top = new Vcore_top;
 
     Verilated::traceEverOn(true);
     VerilatedVcdC* tfp = new VerilatedVcdC;
@@ -20,13 +20,13 @@ int main(int argc, char** argv, char** env) {
     // Set some inputs
     int clk = 0;
     top->clk = 0;
-    top->resetn_i = 0;
+    top->rstn_i = 0;
     for(clk = 0; clk < 10; clk++){
         top->eval();
         tfp->dump(clk);
         top->clk = !top->clk;
     }
-    top->resetn_i = 1;
+    top->rstn_i = 1;
     for(clk; clk < 10000; clk++){
         top->eval();
         tfp->dump(clk);

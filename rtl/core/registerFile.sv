@@ -10,14 +10,14 @@ module registerFile
 #(
     parameter BITSIZE = 32
 )(
-    input             clk,
-    input             rstn_i,
-    input [4:0]       rd,
-    input [4:0]       rs1,
-    input [4:0]       rs2,
-    input [31:0]      data_rd_i,
-    output [31:0]     data_rs1_o,
-    output [31:0]     data_rs2_o
+    input logic         clk,
+    input logic         rstn_i,
+    input logic [4:0]   rd,
+    input logic [4:0]   rs1,
+    input logic [4:0]   rs2,
+    input logic [31:0]  data_rd_i,
+    output logic [31:0] data_rs1_o,
+    output logic [31:0] data_rs2_o
 );
 
 logic [31:0] registers_n[31];

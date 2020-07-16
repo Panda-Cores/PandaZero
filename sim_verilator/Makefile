@@ -39,37 +39,26 @@ VERILATOR_FLAGS += --coverage
 #VERILATOR_FLAGS += --debug
 # Add this trace to get a backtrace in gdb
 #VERILATOR_FLAGS += --gdbbt
-PRJDIR = /home/luca/projects/RVMicroController
-INCLDIRS = $(PRJDIR)/rtl/core
-INCLDIRS += $(PRJDIR)/rtl/memory
-INCLD += $(INCLDIRS)
-INCLD += $(foreach d, $(INCLDIRS), $(wildcard $d/*))
-INCLD += $(foreach d, $(INCLDIRS), $(wildcard $d/*/*))
-INCL=$(foreach d, $(INCLD), -I$d) 
 
+
+PRJDIR = /home/luca/RVMicroController
+INCLUDE := $(shell cat sources.txt)
 
 ######################################################################
 default: run
 
 run:
-	@echo
-	@echo "-- Verilator tracing example"
-
-	@echo
 	@echo "-- VERILATE ----------------"
-	$(VERILATOR) $(VERILATOR_FLAGS) $(INCL) $(PRJDIR)/rtl/riscv_top.sv sim_main.cpp
+	$(VERILATOR) $(VERILATOR_FLAGS) $(INCLUDE) sim_main.cpp
 
 	@echo
 	@echo "-- COMPILE -----------------"
-# To compile, we can either just do what Verilator asks,
-# or call a submakefile where we can override the rules ourselves
-	$(MAKE) -j 4 -C obj_dir -f Vriscv_top.mk
-#	$(MAKE) -j 4 -C obj_dir -f ../Makefile_obj
+	$(MAKE) -j 4 -C obj_dir -f Vcore_top.mk
 
 	@echo
 	@echo "-- RUN ---------------------"
 	@mkdir -p logs
-	obj_dir/Vriscv_top +trace
+	obj_dir/Vcore_top +trace
 
 	@echo
 	@echo "-- COVERAGE ----------------"
@@ -80,13 +69,5 @@ run:
 	@echo "To see waveforms, open vlt_dump.vcd in a waveform viewer"
 	@echo
 
-
-######################################################################
-# Other targets
-
-show-config:
-	$(VERILATOR) -V
-
-maintainer-copy::
-clean mostlyclean distclean maintainer-clean::
+clean:
 	-rm -rf obj_dir logs *.log *.dmp *.vpd coverage.dat 

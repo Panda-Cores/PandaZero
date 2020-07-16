@@ -20,11 +20,12 @@
 
 module decoder
 (
-    input [31:0]    instr,
-    output [4:0]    rs1,
-    output [4:0]    rs2,
-    output [4:0]    rd,
-    output [31:0]   imm
+    input logic [31:0]    instr,
+    output logic [4:0]    rs1,
+    output logic [4:0]    rs2,
+    output logic [4:0]    rd,
+    output logic [31:0]   imm,
+    output logic          invalid
 );
 
 // Decode the register pointers and immediate values
@@ -34,6 +35,8 @@ begin
     rs2 = 'b0;
     rd  = 'b0;
     imm = 'b0;
+    invalid = 1'b0;
+    
     case(instr[6:0])
         `LUI: begin
             imm = {instr[31:12], 12'b0};
@@ -86,6 +89,7 @@ begin
         end
 
         default: begin
+            invalid = 1'b1;
         end
     endcase
 end

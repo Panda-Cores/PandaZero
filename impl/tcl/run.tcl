@@ -13,7 +13,7 @@ source tcl/src_add.tcl
 
 update_compile_order -fileset sources_1
 
-set_property top riscv_top [current_fileset]
+set_property top core_wrapper [current_fileset]
 
 reset_run synth_1
 launch_runs synth_1 -jobs 8

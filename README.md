@@ -4,19 +4,13 @@ My very own RISC-V computer, which will maybe someday run as a microcontroller!
 Features so far:
 * 5 Stage Pipeline (IF, ID, EX, MEM, WB)
 * Pipeline hazard detection & mitigation (via pipeline stall)
-* Load/Store instructions
-* Branching instructions
-* Arithmetic integer instructions (add, sub, shift,...) both register-register and register-immediate
-* Memory controller
-* Theoretically, programs can now run (Some instructions are missing, such as fence & fence_i)!
+* Simple RAM (1KB)
+* Most 32bit RISC-V instructions (some instructions are missing, such as fence & fence_i)
+* Simple programs can run
 
 Upcoming features (in order of priority):
-* Actual memory (currently a rough temporary implementation (which is crap!))
-* With new memory, most likely a IF & MEM stage rework
+* Extensive testing
 * Exception raising on illegal instruction
-* Write and riscv programs to test current features extensively
+* Remaining instructions
 * L1 Instruction and data cache
-
-For now out of scope:
-* floating point unit
-* ???
+* Simple branch predictor

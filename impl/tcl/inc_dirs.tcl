@@ -1,3 +1,3 @@
 set_property include_dirs {
-    $RTL/includes/ \
+    ../rtl/includes/ \
 } [current_fileset]

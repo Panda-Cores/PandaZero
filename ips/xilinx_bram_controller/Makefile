@@ -1,19 +1,9 @@
-PROJECT:=xilinx_ddr3_controller
+PROJECT:=xilinx_bram_controller
 
-default:native
+default:all
 
-all:native
-
-native:
-	vivado -mode batch -source tcl/run_native.tcl
-	mkdir -p ip
-	cp ${PROJECT}.srcs/sources_1/ip/${PROJECT}/${PROJECT}_stub.v ./ip
-	cp ${PROJECT}.srcs/sources_1/ip/${PROJECT}/${PROJECT}.xci ./ip
-	cp ${PROJECT}.srcs/sources_1/ip/${PROJECT}/${PROJECT}.veo ./ip
-	cp ${PROJECT}.srcs/sources_1/ip/${PROJECT}/${PROJECT}.dcp ./ip
-
-axi:
-	vivado -mode batch -source tcl/run_axi.tcl
+all:
+	vivado -mode batch -source tcl/run.tcl
 	mkdir -p ip
 	cp ${PROJECT}.srcs/sources_1/ip/${PROJECT}/${PROJECT}_stub.v ./ip
 	cp ${PROJECT}.srcs/sources_1/ip/${PROJECT}/${PROJECT}.xci ./ip

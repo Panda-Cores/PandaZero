@@ -24,28 +24,26 @@ module MEM_stage
 #(
     parameter BITSIZE = 32
 )(
-    input                               clk,
-    input                               rstn_i,
+    input logic         clk,
+    input logic         rstn_i,
     //EX-MEM
-    input                               valid_i,
-    output                              ack_o,
-    input [31 : 0]                      instr_i,
-    input [31 : 0]                      result_i,
-    input [BITSIZE - 1 : 0]             rs2_i,
-    input [BITSIZE - 1 : 0]             pc_i,
+    input logic         valid_i,
+    output logic        ack_o,
+    input logic [31:0]  instr_i,
+    input logic [31:0]  result_i,
+    input logic [31:0]  rs2_i,
+    input logic [31:0]  pc_i,
     //MEM-MEM
-    output [BITSIZE - 1 : 0]            MEM_addr_o,
-    input [BITSIZE - 1 : 0]             MEM_data_i,
-    output [BITSIZE - 1 : 0]            MEM_data_o,
-    output                              MEM_read_o,
-    input                               MEM_valid_i,
-    output                              MEM_write_o,
-    output [1:0]                        MEM_write_size_o,
+    output logic        MEM_en_o,
+    output logic [31:0] MEM_addr_o,
+    input logic [31:0]  MEM_data_i,
+    output logic [31:0] MEM_data_o,
+    output logic [3:0]  MEM_write_o,
     //MEM-WB
-    input                               ack_i,
-    output                              valid_o,
-    output [31 : 0]                     instr_o,
-    output [BITSIZE - 1 : 0]            data_o
+    input logic         ack_i,
+    output logic        valid_o,
+    output logic [31:0] instr_o,
+    output logic [31:0] data_o
 );
 
 // Data register, 2x32 bit + valid: instr, data
@@ -62,36 +60,35 @@ assign instr_o = data_q.instr;
 assign MEM_addr_o = result_i;
 assign MEM_data_o = rs2_i;
 
-assign MEM_write_size_o = 'b10;
-
 always_comb
 begin
     data_n = data_q;
     ack_o = 1'b0;
-    MEM_write_o = 1'b0;
-    MEM_read_o  = 1'b0;
+    MEM_en_o = 1'b0;
+    MEM_write_o = 'b0;
 
     case(instr_i[6:0])
         // In case of LOAD or STORE, we give the respective signal
-        // to the memory and wait for it to be valid. Then we can give
-        // the data to the next stage
+        // to the memory and wait for the next stage to ack
         `LOAD: begin
-            if((!data_q.valid || ack_i) && MEM_valid_i) begin
+            if((!data_q.valid || ack_i) && valid_i) begin
                 ack_o          = 1'b1;
                 data_n         = {1'b1, instr_i, MEM_data_i};
-            end else if(!data_q.valid)
-                MEM_read_o = 1'b1;
+            end else
+                MEM_en_o = 1'b1;
         end
 
         // In case of LOAD or STORE, we give the respective signal
-        // to the memory and wait for it to be valid. Then we can give
-        // the data to the next stage
+        // to the memory and wait for the next stage to ack
         `STORE: begin
-            if((!data_q.valid || ack_i) && MEM_valid_i) begin
+            if((!data_q.valid || ack_i) && valid_i)begin
                 ack_o          = 1'b1;
                 data_n         = {1'b1, instr_i, MEM_data_i};
-            end else if(!data_q.valid)
-                MEM_write_o = 1'b1;
+            end else begin
+                // TODO correct write enable
+                MEM_write_o = 'b1111;
+                MEM_en_o = 1'b0;
+            end
             
         end
 

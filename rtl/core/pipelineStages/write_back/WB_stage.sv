@@ -21,20 +21,17 @@
 
 `include "instructions.sv"
 
-module WB_stage
-#(
-    BITSIZE
-)(
-    input                       clk,
-    input                       rstn_i,
+module WB_stage (
+    input logic         clk,
+    input logic         rstn_i,
     //MEM-WB
-    output                      ack_o,
-    input                       valid_i,
-    input [31 : 0]              instr_i,
-    input [BITSIZE - 1 : 0]     data_i,
+    output logic        ack_o,
+    input logic         valid_i,
+    input logic [31:0]  instr_i,
+    input logic [31:0]  data_i,
     //WB-REG
-    output [4:0]                rd_o,
-    output [BITSIZE - 1 : 0]    data_o
+    output logic [4:0]  rd_o,
+    output logic [31:0] data_o
 );
 
 assign data_o = data_i;

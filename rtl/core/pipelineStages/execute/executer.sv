@@ -21,13 +21,13 @@
 
 module executer
 (
-    input [31:0]    instr,
-    input [31:0]    pc,
-    input [31:0]    rs1,
-    input [31:0]    rs2,
-    input [31:0]    imm,
-    output [31:0]   result,
-    output          branch_taken
+    input logic [31:0]    instr,
+    input logic [31:0]    pc,
+    input logic [31:0]    rs1,
+    input logic [31:0]    rs2,
+    input logic [31:0]    imm,
+    output logic [31:0]   result,
+    output logic          branch_taken
 );
 
 logic [3:0] operation;

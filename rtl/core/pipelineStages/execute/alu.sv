@@ -1,10 +1,19 @@
-// ---------------RISCV-Luca---------------
+// ------------------------ Disclaimer -----------------------
+// No warranty of correctness, synthesizability or 
+// functionality of this code is given.
+// Use this code under your own risk.
+// When using this code, copy this disclaimer at the top of 
+// Your file
+//
+// (c) Luca Hanel 2020
+//
+// ------------------------------------------------------------
+//
+// Module name: alu
 // 
-// Module:          ALU
-// 
-// Functionality:   ALU
-// 
-// -------------(c) Luca Hanel-------------
+// Functionality: ALU for integer operations
+//
+// ------------------------------------------------------------
 
 `include "alu_operations.sv"
 
@@ -12,18 +21,18 @@ module alu
 #(
     parameter BITSIZE
 )(
-    input   [BITSIZE - 1 : 0]       A_i,
-    input   [BITSIZE - 1 : 0]       B_i,
-    input   [3 : 0]                 operation_i,
-    output  [BITSIZE - 1 : 0]       R_o,
-    output                          overflow_o
+    input logic  [31:0] A_i,
+    input logic  [31:0] B_i,
+    input logic  [3:0]  operation_i,
+    output logic [31:0] R_o,
+    output logic        overflow_o
 );
 /* verilator lint_off UNOPTFLAT */
-    logic [BITSIZE - 1 : 0]         result;
+    logic [31:0]         result;
 /* verilator lint_on UNOPTFLAT */
     logic                           overflow;
 
-    assign R_o = result[BITSIZE - 1 : 0];
+    assign R_o = result[31:0];
     assign overflow_o = overflow;
 
     
