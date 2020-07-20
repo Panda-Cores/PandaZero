@@ -53,12 +53,12 @@ run:
 
 	@echo
 	@echo "-- COMPILE -----------------"
-	$(MAKE) -j 4 -C obj_dir -f Vwishbone_tb.mk
+	$(MAKE) -j 4 -C obj_dir -f Vwishbone_tb.mk 
 
 	@echo
 	@echo "-- RUN ---------------------"
 	@mkdir -p logs
-	obj_dir/Vwishbone_tb +trace
+	obj_dir/Vwishbone_tb --trace
 
 	@echo
 	@echo "-- COVERAGE ----------------"
@@ -66,7 +66,7 @@ run:
 
 	@echo
 	@echo "-- DONE --------------------"
-	@echo "To see waveforms, open vlt_dump.vcd in a waveform viewer"
+	@echo "To see waveforms, open logs/trace.vcd in a waveform viewer"
 	@echo
 
 clean:
