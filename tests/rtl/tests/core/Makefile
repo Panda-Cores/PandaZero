@@ -42,23 +42,23 @@ VERILATOR_FLAGS += --coverage
 
 
 PRJDIR = /home/luca/RVMicroController
-INCLUDE := $(shell cat sources.txt)
+INCLUDE := $(shell cat ../../common/sources.txt)
 
 ######################################################################
 default: run
 
 run:
 	@echo "-- VERILATE ----------------"
-	$(VERILATOR) $(VERILATOR_FLAGS) $(INCLUDE) sim_main.cpp
+	$(VERILATOR) $(VERILATOR_FLAGS) $(INCLUDE) sim_main.cpp --top-module core_wrapper
 
 	@echo
 	@echo "-- COMPILE -----------------"
-	$(MAKE) -j 4 -C obj_dir -f Vcore_top.mk
+	$(MAKE) -j 4 -C obj_dir -f Vcore_wrapper.mk
 
 	@echo
 	@echo "-- RUN ---------------------"
 	@mkdir -p logs
-	obj_dir/Vcore_top +trace
+	obj_dir/Vcore_wrapper +trace
 
 	@echo
 	@echo "-- COVERAGE ----------------"

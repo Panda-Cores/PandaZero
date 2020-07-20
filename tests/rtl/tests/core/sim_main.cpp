@@ -1,5 +1,5 @@
 #include <verilated.h>
-#include "Vcore_top.h"
+#include "Vcore_wrapper.h"
 
 #if VM_TRACE
 # include <verilated_vcd_c.h>
@@ -9,7 +9,7 @@ int main(int argc, char** argv, char** env) {
     Verilated::commandArgs(argc, argv);
     long r;
     int flags;
-    Vcore_top* top = new Vcore_top;
+    Vcore_wrapper* top = new Vcore_wrapper;
 
     Verilated::traceEverOn(true);
     VerilatedVcdC* tfp = new VerilatedVcdC;

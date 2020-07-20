@@ -1,5 +1,5 @@
-/sim_verilator/logs
-/sim_verilator/obj_dir
+/**/logs
+/**/obj_dir
 *.sim
 *.runs
 *.hbs
