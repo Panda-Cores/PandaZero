@@ -164,7 +164,6 @@ int main(int argc, char** argv, char** env) {
     Verilated::commandArgs(argc, argv);
     tb = new TESTBENCH<Vwishbone_tb>();
     tb->opentrace("logs/trace.vcd");
-
     int result = 0;
 
     // Initialize inputs
@@ -174,29 +173,27 @@ int main(int argc, char** argv, char** env) {
     tb->m_core->mwe_i = 0;
     tb->m_core->mnaccess_i = 0;
 
+    // Reset
     tb->reset();
 
     // Run tests
-    // result = simultaneous_write(0, 1, 0x8, 0x14, 0xdeadbeef, 0xbeefdead);
-
     result = test_wishbone();
-    // Final model cleanup
+    
+    // Cleanup
     tb->tick();
     tb->m_core->final();
 
+    // Evaluate test
     if(result == 0)
         std::cout << "PASSED" << std::endl;
     else
         std::cout << "FAILED " << result << std::endl;
     
-
-
     //  Coverage analysis (since test passed)
     VerilatedCov::write("logs/coverage.dat");
 
     // Destroy model
     delete tb->m_core; tb->m_core = NULL;
 
-    // Fin
     exit(0);
 }

@@ -23,8 +23,6 @@ endif
 VERILATOR_FLAGS =
 # Generate C++ in executable form
 VERILATOR_FLAGS += -cc --exe
-# Generate makefile dependencies (not shown as complicates the Makefile)
-#VERILATOR_FLAGS += -MMD
 # Optimize
 VERILATOR_FLAGS += -O2 -x-assign 0
 # Warn abount lint issues; may not want this on less solid designs
@@ -35,21 +33,20 @@ VERILATOR_FLAGS += --trace
 VERILATOR_FLAGS += --assert
 # Generate coverage analysis
 VERILATOR_FLAGS += --coverage
-# Run Verilator in debug mode
-#VERILATOR_FLAGS += --debug
-# Add this trace to get a backtrace in gdb
-#VERILATOR_FLAGS += --gdbbt
+VERILATOR_FLAGS += --trace-structs
+# VERILATOR_FLAGS += --prefix top
 
+VERILATOR_FLAGS += wishbone_tb.sv
+VERILATOR_FLAGS += --top-module wishbone_tb
 
-PRJDIR = /home/luca/projects/PandaZero
-INCLUDE := $(shell cat $(PRJDIR)/tests/rtl/common/sources.txt)
+INCLUDE := $(shell cat ../../common/sources.txt)
 
 ######################################################################
 default: run
 
 run:
 	@echo "-- VERILATE ----------------"
-	$(VERILATOR) $(VERILATOR_FLAGS) $(INCLUDE) sim_main.cpp wishbone_tb.sv --top-module wishbone_tb
+	$(VERILATOR) $(VERILATOR_FLAGS) $(INCLUDE) sim_main.cpp
 
 	@echo
 	@echo "-- COMPILE -----------------"
@@ -65,9 +62,8 @@ run:
 	$(VERILATOR_COVERAGE) --annotate logs/annotated logs/coverage.dat
 
 	@echo
-	@echo "-- DONE --------------------"
-	@echo "To see waveforms, open logs/trace.vcd in a waveform viewer"
-	@echo
+	@echo "-- TEST RESULT -------------"
+	@echo "   `cat result.txt`"
 
 clean:
-	-rm -rf obj_dir logs *.log *.dmp *.vpd coverage.dat 
+	-rm -rf obj_dir logs *.log *.dmp *.vpd coverage.dat result.txt

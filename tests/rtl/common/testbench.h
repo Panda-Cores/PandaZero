@@ -52,10 +52,10 @@ template<class MODULE>	class TESTBENCH {
 			// has settled before the rising edge of the clock.
 			m_core->clk = 0;
 			m_core->eval();
+
 			if(m_trace) m_trace->dump(10*m_tickcount-2);
 
 			// Toggle the clock
-
 			// Rising edge
 			m_core->clk = 1;
 			m_core->eval();

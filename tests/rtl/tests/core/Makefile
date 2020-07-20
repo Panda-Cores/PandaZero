@@ -23,8 +23,6 @@ endif
 VERILATOR_FLAGS =
 # Generate C++ in executable form
 VERILATOR_FLAGS += -cc --exe
-# Generate makefile dependencies (not shown as complicates the Makefile)
-#VERILATOR_FLAGS += -MMD
 # Optimize
 VERILATOR_FLAGS += -O2 -x-assign 0
 # Warn abount lint issues; may not want this on less solid designs
@@ -35,39 +33,39 @@ VERILATOR_FLAGS += --trace
 VERILATOR_FLAGS += --assert
 # Generate coverage analysis
 VERILATOR_FLAGS += --coverage
-# Run Verilator in debug mode
-#VERILATOR_FLAGS += --debug
-# Add this trace to get a backtrace in gdb
-#VERILATOR_FLAGS += --gdbbt
+VERILATOR_FLAGS += --trace-structs
+# VERILATOR_FLAGS += --prefix top
 
-
-PRJDIR = /home/luca/RVMicroController
 INCLUDE := $(shell cat ../../common/sources.txt)
+
+VERILATOR_FLAGS += --top-module core_wrapper
 
 ######################################################################
 default: run
 
 run:
 	@echo "-- VERILATE ----------------"
-	$(VERILATOR) $(VERILATOR_FLAGS) $(INCLUDE) sim_main.cpp --top-module core_wrapper
+	$(VERILATOR) $(VERILATOR_FLAGS) $(INCLUDE) sim_main.cpp
 
 	@echo
 	@echo "-- COMPILE -----------------"
-	$(MAKE) -j 4 -C obj_dir -f Vcore_wrapper.mk
+	# $(MAKE) -j 4 -C obj_dir -f top.mk 
+	$(MAKE) -j 4 -C obj_dir -f Vcore_wrapper.mk 
+	
 
 	@echo
 	@echo "-- RUN ---------------------"
 	@mkdir -p logs
-	obj_dir/Vcore_wrapper +trace
+	# obj_dir/top --trace > result.txt
+	obj_dir/Vcore_wrapper --trace > result.txt
 
 	@echo
 	@echo "-- COVERAGE ----------------"
 	$(VERILATOR_COVERAGE) --annotate logs/annotated logs/coverage.dat
 
 	@echo
-	@echo "-- DONE --------------------"
-	@echo "To see waveforms, open vlt_dump.vcd in a waveform viewer"
-	@echo
+	@echo "-- TEST RESULT -------------"
+	@echo "   `cat result.txt`"
 
 clean:
-	-rm -rf obj_dir logs *.log *.dmp *.vpd coverage.dat 
+	-rm -rf obj_dir logs *.log *.dmp *.vpd coverage.dat result.txt
