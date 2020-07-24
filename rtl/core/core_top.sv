@@ -26,11 +26,7 @@ module core_top (
     output logic         rst_reqn_o,
     input logic          halt_core_i,
 // IF-Memory
-    output logic [31:0]  IF_addr_o,
-    output logic         IF_en_o,
-    input logic  [31:0]  IF_data_i,
-    output logic [31:0]  IF_data_o,
-    output logic [3:0]   IF_write_o,
+    wb_master_bus_t      IF_wb_bus,
 // MEM-Memory
     output logic [31:0]  MEM_addr_o,
     output logic         MEM_en_o,
@@ -41,8 +37,6 @@ module core_top (
 
 
 assign rst_reqn_o = rstn_i;
-assign IF_data_o = 'b0;
-assign IF_write_o = 'b0;
 
 //IF-ID
 logic                ID_IF_ack;
@@ -113,10 +107,7 @@ IF_stage IF_i (
     .valid_o     ( IF_ID_valid   ),
     .instr_o     ( IF_ID_instr   ),
     .pc_o        ( IF_ID_pc      ),
-    //TODO: Cache
-    .MEM_en_o    ( IF_en_o      ),
-    .MEM_addr_o  ( IF_addr_o     ),
-    .MEM_data_i  ( IF_data_i     ),
+    .wb_bus      ( IF_wb_bus     ),
     //Branching
     .branch_i    ( branch        ),
     .pc_i        ( EX_MEM_result )
