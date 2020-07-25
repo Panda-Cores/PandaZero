@@ -18,6 +18,8 @@
 ../../../../common/wishbone/src/wishbone_slave.sv
 -I../../../../common/wishbone/includes
 
-../../../../common/load_unit/src/load_unit.sv
+../../../../common/load_store_unit/src/load_unit.sv
+../../../../common/load_store_unit/src/store_unit.sv
+../../../../common/load_store_unit/src/lsu.sv
 
 -I../../../../rtl/includes

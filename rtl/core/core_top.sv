@@ -28,11 +28,7 @@ module core_top (
 // IF-Memory
     wb_master_bus_t      IF_wb_bus,
 // MEM-Memory
-    output logic [31:0]  MEM_addr_o,
-    output logic         MEM_en_o,
-    input logic  [31:0]  MEM_data_i,
-    output logic [31:0]  MEM_data_o,
-    output logic [3:0]   MEM_write_o
+    wb_master_bus_t      MEM_wb_bus
 );
 
 
@@ -167,11 +163,7 @@ MEM_stage MEM_i (
     .instr_i     ( EX_MEM_instr  ),
     .result_i    ( EX_MEM_result ),
     .rs2_i       ( EX_MEM_rs2    ),
-    .MEM_en_o    ( MEM_en_o      ),
-    .MEM_addr_o  ( MEM_addr_o    ),
-    .MEM_data_i  ( MEM_data_i    ),
-    .MEM_data_o  ( MEM_data_o    ),
-    .MEM_write_o ( MEM_write_o   ),
+    .wb_bus      ( MEM_wb_bus    ),
     .ack_i       ( WB_MEM_ack    ),
     .valid_o     ( MEM_WB_valid  ),
     .instr_o     ( MEM_WB_instr  ),

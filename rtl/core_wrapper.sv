@@ -27,15 +27,10 @@ module core_wrapper
 );
 
 wire        rst_reqn;
-wire [31:0] MEM_addr;
-wire [31:0] mem_MEM_data;
-wire [31:0] MEM_mem_data;
-wire [3:0]  MEM_write;
-wire        MEM_en;
 
 assign rst_o = ~rst_reqn;
 
-wb_master_bus_t#(.TAGSIZE(1)) IF_wb_bus[1];
+wb_master_bus_t#(.TAGSIZE(1)) masters[2];
 wb_slave_bus_t#(.TAGSIZE(1))  rom_wb_bus[1];
 
 core_top core_i
@@ -44,26 +39,8 @@ core_top core_i
     .rstn_i     ( rstn_i       ),
     .halt_core_i( halt_core_i  ),
     .rst_reqn_o ( rst_reqn     ),
-    .IF_wb_bus  ( IF_wb_bus[0] ),
-    .MEM_en_o   ( MEM_en       ),
-    .MEM_addr_o ( MEM_addr     ),
-    .MEM_data_i ( mem_MEM_data ),
-    .MEM_data_o ( MEM_mem_data ),
-    .MEM_write_o( MEM_write    )
-);
-
-dual_ram #(
-  .SIZE     ( 32           )
-) ram_i (
-  .clk      ( clk          ),
-  .rstn_i   ( rst_reqn     ),
-  .addra_i  ( 32'b0        ),
-  .ena_i    ( 1'b0         ),
-  .addrb_i  ( MEM_addr     ),
-  .enb_i    ( MEM_en       ),
-  .web_i    ( MEM_write    ),
-  .dinb_i   ( MEM_mem_data ),
-  .doutb_o  ( mem_MEM_data )
+    .IF_wb_bus  ( masters[1] ),
+    .MEM_wb_bus ( masters[0])
 );
 
 wb_ram_wrapper #(
@@ -77,13 +54,13 @@ wb_ram_wrapper #(
 wishbone_interconnect #(
     .TAGSIZE    ( 1 ),
     .N_SLAVE    ( 1 ),
-    .N_MASTER   ( 1 )
+    .N_MASTER   ( 2 )
 ) intercon (
     .clk_i      ( clk ),
     .rst_i      ( ~rstn_i ),
     .SSTART_ADDR({32'h0}),
-    .SEND_ADDR  ({32'h40}),
-    .wb_master_bus(IF_wb_bus),
+    .SEND_ADDR  ({32'h80}),
+    .wb_master_bus(masters),
     .wb_slave_bus(rom_wb_bus)
 );
 
