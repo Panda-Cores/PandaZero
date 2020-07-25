@@ -6,9 +6,9 @@ Features so far:
 * Pipeline hazard detection & mitigation (via pipeline stall)
 * Most 32bit RISC-V instructions (some instructions are missing, such as fence & fence_i)
 * Core can be halted (but no debug module yet)
+* IF & MEM stages are wishbone masters on a common bus, which supports multiple masters/multiple slaves
 
 Upcoming features (in order of priority):
-* Adding wishbone bus to the core
 * Debug module
 * Extensive testing
 * Exception raising on illegal instruction
