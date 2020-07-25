@@ -13,9 +13,13 @@
 ../../../../rtl/memory/dual_ram.sv
 ../../../../rtl/memory/wb_ram_wrapper.sv
 
-../../../../common/wishbone/wishbone_interconnect.sv
-../../../../common/wishbone/wishbone_master.sv
-../../../../common/wishbone/wishbone_slave.sv
+../../../../common/wishbone/src/wishbone_interconnect.sv
+../../../../common/wishbone/src/wishbone_master.sv
+../../../../common/wishbone/src/wishbone_slave.sv
+-I../../../../common/wishbone/includes
+
+../../../../common/load_store_unit/src/load_unit.sv
+../../../../common/load_store_unit/src/store_unit.sv
+../../../../common/load_store_unit/src/lsu.sv
 
 -I../../../../rtl/includes
--I../../../../common/includes

@@ -34,7 +34,9 @@ logic [3:0]     ram_we;
 
 assign ram_we = (wb_we) ? wb_sel : 4'b0;
 
-wishbone_slave wb_slave_i(
+wishbone_slave #(
+    .TAGSIZE    ( 1         )
+)wb_slave_i(
     .clk_i      ( clk       ),
     .rst_i      ( ~rstn_i   ),
     .data_i     ( ram_wb_d  ),

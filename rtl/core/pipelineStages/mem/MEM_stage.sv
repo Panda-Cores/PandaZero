@@ -34,12 +34,8 @@ module MEM_stage
     input logic [31:0]  result_i,
     input logic [31:0]  rs2_i,
     input logic [31:0]  pc_i,
-    //MEM-MEM
-    output logic        MEM_en_o,
-    output logic [31:0] MEM_addr_o,
-    input logic [31:0]  MEM_data_i,
-    output logic [31:0] MEM_data_o,
-    output logic [3:0]  MEM_write_o,
+    //MEM-Memory
+    wb_master_bus_t     wb_bus,
     //MEM-WB
     input logic         ack_i,
     output logic        valid_o,
@@ -54,19 +50,39 @@ struct packed {
     logic [31:0]    data;
 } data_n, data_q;
 
+logic load;
+logic store;
+logic lsu_valid;
+logic lsu_valid_n;
+logic lsu_valid_q;
+logic [31:0] lu_data;
+logic [3:0] lsu_we;
 
 assign valid_o = data_q.valid;
 assign data_o = data_q.data;
 assign instr_o = data_q.instr;
-assign MEM_addr_o = result_i;
-assign MEM_data_o = rs2_i;
+
+lsu lsu_i(
+    .clk        ( clk       ),
+    .rstn_i     ( rstn_i    ),
+    .read_i     ( load      ),
+    .write_i    ( store     ),
+    .we_i       ( lsu_we    ),
+    .addr_i     ( result_i  ),
+    .data_i     ( rs2_i     ),
+    .data_o     ( lu_data   ),
+    .valid_o    ( lsu_valid ),
+    .wb_bus     ( wb_bus    )
+);
 
 always_comb
 begin
-    data_n = data_q;
-    ack_o = 1'b0;
-    MEM_en_o = 1'b0;
-    MEM_write_o = 'b0;
+    lsu_valid_n = lsu_valid_q;
+    data_n  = data_q;
+    ack_o   = 1'b0;
+    load    = 1'b0;
+    store   = 1'b0;
+    lsu_we  = 'b0;
 
     // Data is no longer valid if we recieved and ack
     if(ack_i)
@@ -76,46 +92,49 @@ begin
         // In case of LOAD or STORE, we give the respective signal
         // to the memory and wait for the next stage to ack
         `LOAD: begin
-            if((!data_q.valid || ack_i) && valid_i) begin
+            if(!lsu_valid_q) begin
+                lsu_valid_n = lsu_valid;
+                load        = 1'b1;
+            end else if((!data_q.valid || ack_i) && valid_i) begin
                 ack_o          = 1'b1;
                 data_n.valid   = 1'b1;
                 data_n.instr   = instr_i;
+                lsu_valid_n    = 1'b0;
                 case(instr_i[13:12])
                     2'b00:
-                        data_n.data = {{24{MEM_data_i[7]}}, MEM_data_i[7:0]};
+                        data_n.data = {{24{lu_data[7]}}, lu_data[7:0]};
                     2'b01:
-                        data_n.data = {{16{MEM_data_i[15]}}, MEM_data_i[15:0]};
+                        data_n.data = {{16{lu_data[15]}}, lu_data[15:0]};
                     2'b10:
-                        data_n.data = MEM_data_i;
+                        data_n.data = lu_data;
                     default: begin
                     end
                 endcase
             end
-            MEM_en_o = 1'b1;
         end
 
         // In case of LOAD or STORE, we give the respective signal
         // to the memory and wait for the next stage to ack
         `STORE: begin
-            if((!data_q.valid || ack_i) && valid_i)begin
+            if(!lsu_valid_q) begin
+                lsu_valid_n  = lsu_valid;
+                store        = 1'b1;
+                // Write the correct amount of bytes
+                case(instr_i[13:12])
+                    2'b00:
+                        lsu_we = 4'b0001;
+                    2'b01:
+                        lsu_we = 4'b0011;
+                    2'b10:
+                        lsu_we = 4'b1111;
+                    default: begin
+                    end
+                endcase
+            end else if((!data_q.valid || ack_i) && valid_i)begin
                 ack_o          = 1'b1;
-                data_n         = {1'b1, instr_i, MEM_data_i};
-                MEM_en_o       = 1'b1;
-                MEM_write_o = 'b1111;
-                MEM_en_o    = 1'b1;
+                data_n         = {1'b1, instr_i, 32'b0};
+                lsu_valid_n    = 1'b0;
             end
-            // Write the correct amount of bytes
-            case(instr_i[13:12])
-                2'b00:
-                    MEM_write_o = 4'b0001;
-                2'b01:
-                    MEM_write_o = 4'b0011;
-                2'b10:
-                    MEM_write_o = 4'b1111;
-                default: begin
-                end
-            endcase
-            MEM_en_o    = 1'b1;            
         end
 
         // In case of these, we can directly give the data to the
@@ -148,6 +167,7 @@ always_ff @(posedge clk, negedge rstn_i) begin
         data_q <= 'b0;
     end else if(!halt_i) begin
         data_q <= data_n;
+        lsu_valid_q <= lsu_valid_n;
     end
 end
 
