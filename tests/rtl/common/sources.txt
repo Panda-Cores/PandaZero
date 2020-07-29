@@ -10,7 +10,7 @@
 ../../../../rtl/core/pipelineStages/mem/MEM_stage.sv 
 ../../../../rtl/core/pipelineStages/write_back/WB_stage.sv
 
-../../../../rtl/memory/dual_ram.sv
+../../../../rtl/memory/ram.sv
 ../../../../rtl/memory/wb_ram_wrapper.sv
 
 ../../../../common/wishbone/src/wishbone_interconnect.sv
@@ -21,5 +21,7 @@
 ../../../../common/load_store_unit/src/load_unit.sv
 ../../../../common/load_store_unit/src/store_unit.sv
 ../../../../common/load_store_unit/src/lsu.sv
+
+../../../../common/dbg_module/src/dbg_module.sv
 
 -I../../../../rtl/includes

@@ -48,16 +48,16 @@ wishbone_slave #(
     .wb_bus     ( wb_bus    )
 );
 
-dual_ram #(
+ram #(
     .SIZE (SIZE)
 )ram_i(
-    .clk        ( clk       ),
-    .rstn_i     ( rstn_i    ),
-    .addrb_i    ( addr      ),
-    .enb_i      ( 1'b1      ),
-    .web_i      ( ram_we    ),
-    .dinb_i     ( wb_ram_d  ),
-    .doutb_o    ( ram_wb_d  )
+    .clk    ( clk       ),
+    .rstn_i ( rstn_i    ),
+    .addr_i ( addr      ),
+    .en_i   ( 1'b1      ),
+    .we_i   ( ram_we    ),
+    .din_i  ( wb_ram_d  ),
+    .dout_o ( ram_wb_d  )
 );
 
 endmodule
