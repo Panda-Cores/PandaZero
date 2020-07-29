@@ -5,11 +5,10 @@ Features so far:
 * 5 Stage Pipeline (IF, ID, EX, MEM, WB)
 * Pipeline hazard detection & mitigation (via pipeline stall)
 * Most 32bit RISC-V instructions (some instructions are missing, such as fence & fence_i)
-* Core can be halted (but no debug module yet)
 * IF & MEM stages are wishbone masters on a common bus, which supports multiple masters/multiple slaves
+* Debug module (simple one to read out memory and halt the core, not RISC-V spec consistent!)
 
 Upcoming features (in order of priority):
-* Debug module
 * Extensive testing
 * Exception raising on illegal instruction
 * Remaining instructions
