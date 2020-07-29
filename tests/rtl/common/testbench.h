@@ -1,5 +1,15 @@
 #include <verilated_vcd_c.h>
 
+vluint64_t main_time = 0;       // Current simulation time
+// This is a 64-bit integer to reduce wrap over issues and
+// allow modulus.  This is in units of the timeprecision
+// used in Verilog (or from --timescale-override)
+
+double sc_time_stamp () {       // Called by $time in Verilog
+		return main_time;           // converts to double, to match
+																// what SystemC does
+}
+
 template<class MODULE>	class TESTBENCH {
 	public:
 		unsigned long	m_tickcount;
