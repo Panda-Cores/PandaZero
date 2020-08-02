@@ -40,10 +40,6 @@ logic                IF_ID_valid;
 logic [31:0]         IF_ID_instr;
 logic [31:0]         IF_ID_pc;
 
-//EX-IF (branch)
-logic                branch;
-logic [31:0]         EX_IF_pc;
-
 //ID-EX
 logic                EX_ID_ack;
 logic                ID_EX_valid;
@@ -87,6 +83,7 @@ logic [31:0]         REG_rs1_d;
 logic [31:0]         REG_rs2_d;
 
 // Branching
+logic                branch;
 logic                flush;
 logic [31:0]         IF_pc;
 
@@ -104,7 +101,7 @@ logic [31:0]         dbg_curr_pc;
 // or request by debug module
 assign flush = branch | dbg_flush;
 // If flushed by debug module, set the requested pc
-assign IF_pc = (dbg_flush) ? EX_MEM_result : dbg_pc;
+assign IF_pc = (dbg_flush) ? dbg_pc : EX_MEM_result;
 
 // Mux debug module and core to register file
 always_comb

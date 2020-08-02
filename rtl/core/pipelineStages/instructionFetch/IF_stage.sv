@@ -95,12 +95,12 @@ always_ff @(posedge clk, negedge rstn_i)
 begin
     if(!rstn_i) begin
         data_q <= 'b0;
-    end else if(!halt_i) begin
+    end else begin
         data_q <= data_n;
 
         if(branch_i || flush_i)
             pc_q <= pc_i;
-        else if(incr_pc)
+        else if(incr_pc && !halt_i)
             pc_q <= pc_q + 4;
     end
 end

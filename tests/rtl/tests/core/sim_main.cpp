@@ -51,6 +51,7 @@ void write(int addr, int data){
     while(tb->m_core->dbg_ready_o == 0)
         tb->tick();
     tb->m_core->dbg_cmd_i = 0x0;
+    tb->tick();
 }
 
 void halt_core(){
@@ -102,8 +103,9 @@ void set_pc(int pc){
 
 void load_program(int program[1024], int len, int startAddr){
     halt_core();
-    for(int i = startAddr; i < (startAddr + len); i++)
-        write(i*4, program[i]);
+    for(int i = 0; i < len; i++){
+        write(startAddr + 4*i, program[i]);
+    }
 }
 
 int test_registers(){
@@ -124,7 +126,7 @@ int test_registers(){
 }
 
 int main(int argc, char** argv, char** env) {
-    int program[32];
+    int program[1024];
 
     program[0x0]      = 0b00000001000000000000000010010011;     // addi 16, x0, x1;
     program[0x1]      = 0b00000000000100010000000100010011;     // addi 1, x2, x2;
@@ -154,6 +156,7 @@ int main(int argc, char** argv, char** env) {
     int exp_mem[10][2];
     exp_mem[0][0] = 0x18;
     exp_mem[0][1] = 0x12;
+    
     Verilated::commandArgs(argc, argv);
     tb = new TESTBENCH<Vcore_wrapper>();
     tb->opentrace("logs/trace.vcd");
