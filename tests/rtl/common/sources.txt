@@ -13,9 +13,9 @@
 ../../../../rtl/memory/ram.sv
 ../../../../rtl/memory/wb_ram_wrapper.sv
 
-../../../../common/wishbone/src/wishbone_interconnect.sv
-../../../../common/wishbone/src/wishbone_master.sv
-../../../../common/wishbone/src/wishbone_slave.sv
+../../../../common/wishbone/src/wb_xbar.sv
+../../../../common/wishbone/src/wb_master.sv
+../../../../common/wishbone/src/wb_slave.sv
 -I../../../../common/wishbone/includes
 
 ../../../../common/load_store_unit/src/load_unit.sv

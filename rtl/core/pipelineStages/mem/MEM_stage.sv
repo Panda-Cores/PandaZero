@@ -35,7 +35,7 @@ module MEM_stage
     input logic [31:0]  rs2_i,
     input logic [31:0]  pc_i,
     //MEM-Memory
-    wb_master_bus_t     wb_bus,
+    wb_bus_t.master     wb_bus,
     //MEM-WB
     input logic         ack_i,
     output logic        valid_o,

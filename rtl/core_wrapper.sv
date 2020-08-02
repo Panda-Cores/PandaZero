@@ -39,8 +39,8 @@ logic dbg_core_rst_req;
 logic dbg_periph_rst_req;
 
 // Wishbone busses
-wb_master_bus_t#(.TAGSIZE(1)) masters[3];
-wb_slave_bus_t#(.TAGSIZE(1))  slaves[1];
+wb_bus_t#(.TAGSIZE(1)) masters[3];
+wb_bus_t#(.TAGSIZE(1)) slaves[1];
 
 // Debug bus
 dbg_intf dbg_bus;
@@ -81,17 +81,17 @@ wb_ram_wrapper #(
   .wb_bus ( slaves[0] )
 );
 
-wishbone_interconnect #(
+wb_xbar #(
     .TAGSIZE        ( 1 ),
     .N_SLAVE        ( 1 ),
     .N_MASTER       ( 3 )
-) wb_intercon (
+) wb_xbar_i (
     .clk_i          ( clk       ),
     .rst_i          ( ~rstn_i   ),
     .SSTART_ADDR    ({32'h0}    ),
     .SEND_ADDR      ({32'h1000} ),
-    .wb_master_bus  (masters    ),
-    .wb_slave_bus   (slaves     )
+    .wb_slave_port  (masters    ),
+    .wb_master_port (slaves     )
 );
 
 endmodule

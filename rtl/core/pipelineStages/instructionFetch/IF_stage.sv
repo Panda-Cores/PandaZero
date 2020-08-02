@@ -27,7 +27,7 @@ module IF_stage (
     output logic  [31:0] instr_o,
     output logic  [31:0] pc_o,
     //Memory
-    wb_master_bus_t      wb_bus,
+    wb_bus_t.master      wb_bus,
     //Branching
     input logic [31:0]   pc_i,
     input logic          branch_i

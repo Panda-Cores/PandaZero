@@ -22,7 +22,7 @@ module wb_ram_wrapper #(
 )(
     input logic             clk,
     input logic             rstn_i,
-    wb_slave_bus_t          wb_bus
+    wb_bus_t.slave          wb_bus
 );
 
 logic [31:0]    ram_wb_d;
@@ -34,7 +34,7 @@ logic [3:0]     ram_we;
 
 assign ram_we = (wb_we) ? wb_sel : 4'b0;
 
-wishbone_slave #(
+wb_slave #(
     .TAGSIZE    ( 1         )
 )wb_slave_i(
     .clk_i      ( clk       ),

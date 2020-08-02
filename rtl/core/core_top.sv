@@ -25,9 +25,9 @@ module core_top (
     input logic          rstn_i,
     output logic         rst_reqn_o,
 // IF-Memory
-    wb_master_bus_t      IF_wb_bus,
+    wb_bus_t.master      IF_wb_bus,
 // MEM-Memory
-    wb_master_bus_t      MEM_wb_bus,
+    wb_bus_t.master      MEM_wb_bus,
 // Debug bus
     dbg_intf             dbg_bus
 );
