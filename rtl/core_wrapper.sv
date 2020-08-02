@@ -35,13 +35,15 @@ logic core_rst_reqn;
 logic periph_rst_req;
 
 // debug signals
-logic dbg_halt_core;
 logic dbg_core_rst_req;
 logic dbg_periph_rst_req;
 
 // Wishbone busses
-wb_master_bus_t#(.TAGSIZE(1)) masters[3];
-wb_slave_bus_t#(.TAGSIZE(1))  slaves[1];
+wb_bus_t#(.TAGSIZE(1)) masters[3];
+wb_bus_t#(.TAGSIZE(1)) slaves[1];
+
+// Debug bus
+dbg_intf dbg_bus;
 
 // Reset requests
 assign core_rst_reqn  = (~dbg_core_rst_req) & rstn_i;
@@ -51,15 +53,13 @@ core_top core_i
 (
     .clk        ( clk           ),
     .rstn_i     ( rstn_i        ),
-    .halt_core_i( dbg_halt_core ),
     .rst_reqn_o ( core_rst_reqn ),
     .IF_wb_bus  ( masters[2]    ),
-    .MEM_wb_bus ( masters[1]    )
+    .MEM_wb_bus ( masters[1]    ),
+    .dbg_bus    ( dbg_bus       )
 );
 
-dbg_module #(
-  .INTERNAL_MEM_S   ( 0 )
-)dbg_module_i (
+dbg_module dbg_module_i (
   .clk              ( clk               ),
   .rstn_i           ( rstn_i            ),
   .cmd_i            ( dbg_cmd_i         ),
@@ -67,9 +67,9 @@ dbg_module #(
   .data_i           ( dbg_data_i        ),
   .data_o           ( dbg_data_o        ),
   .ready_o          ( dbg_ready_o       ),
-  .halt_core_o      ( dbg_halt_core     ),
   .core_rst_req_o   ( dbg_core_rst_req  ),
   .periph_rst_req_o ( dbg_periph_rst_req),
+  .dbg_bus          ( dbg_bus           ),
   .wb_bus           ( masters[0]        )
 );
 
@@ -81,17 +81,17 @@ wb_ram_wrapper #(
   .wb_bus ( slaves[0] )
 );
 
-wishbone_interconnect #(
+wb_xbar #(
     .TAGSIZE        ( 1 ),
     .N_SLAVE        ( 1 ),
     .N_MASTER       ( 3 )
-) wb_intercon (
+) wb_xbar_i (
     .clk_i          ( clk       ),
     .rst_i          ( ~rstn_i   ),
     .SSTART_ADDR    ({32'h0}    ),
     .SEND_ADDR      ({32'h1000} ),
-    .wb_master_bus  (masters    ),
-    .wb_slave_bus   (slaves     )
+    .wb_slave_port  (masters    ),
+    .wb_master_port (slaves     )
 );
 
 endmodule

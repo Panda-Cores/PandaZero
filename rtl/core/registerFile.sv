@@ -27,8 +27,8 @@ module registerFile (
     output logic [31:0] data_rs2_o
 );
 
-logic [31:0] registers_n[31];
-logic [31:0] registers_q[31];
+logic [31:0] registers_n[32];
+logic [31:0] registers_q[32];
 
 always_comb
 begin

@@ -24,13 +24,13 @@ module core_top (
     input logic          clk,
     input logic          rstn_i,
     output logic         rst_reqn_o,
-    input logic          halt_core_i,
 // IF-Memory
-    wb_master_bus_t      IF_wb_bus,
+    wb_bus_t.master      IF_wb_bus,
 // MEM-Memory
-    wb_master_bus_t      MEM_wb_bus
+    wb_bus_t.master      MEM_wb_bus,
+// Debug bus
+    dbg_intf             dbg_bus
 );
-
 
 assign rst_reqn_o = rstn_i;
 
@@ -78,27 +78,82 @@ logic [31:0]         MEM_WB_data;
 logic [4 : 0]        WB_REG_rd;
 logic [31:0]         WB_REG_data;
 
-// Flush pipeline in case of taken branch
-// (flush signal currently not required, but maybe later)
+//REG
+logic [4:0]          REG_rd;
+logic [31:0]         REG_rdd;
+logic [4:0]          REG_rs1;
+logic [4:0]          REG_rs2;
+logic [31:0]         REG_rs1_d;
+logic [31:0]         REG_rs2_d;
+
+// Branching
 logic                flush;
-assign flush = branch;
+logic [31:0]         IF_pc_i;
+
+// Debug signals
+logic                halt_core;
+logic                dbg_flush;
+logic [4:0]          dbg_rs;
+logic [4:0]          dbg_rd;
+logic [31:0]         dbg_rdd;
+logic [31:0]         dbg_rsd;
+logic [31:0]         dbg_pc;
+
+// Flush pipeline in case of taken branch
+// or request by debug module
+assign flush = branch | dbg_flush;
+// If flushed by debug module, set the requested pc
+assign IF_pc_i = (dbg_flush) ? EX_MEM_result : dbg_pc;
+
+// Mux debug module and core to register file
+always_comb
+begin
+    // If not halted, mux to core (ID & WB)
+    REG_rd = WB_REG_rd;
+    REG_rdd = WB_REG_data;
+    REG_rs1 = ID_REG_rs1;
+    REG_rs2 = ID_REG_rs2;
+    REG_ID_rs1_d = REG_rs1_d;
+    REG_ID_rs2_d = REG_rs2_d;
+
+    // If halted, mux to debug module
+    if(halt_core) begin
+        REG_rd = dbg_rd;
+        REG_rs1 = dbg_rs;
+        REG_rdd = dbg_rdd;
+        dbg_rsd = REG_rs1_d;
+    end
+end
+
+core_dbg_module core_dbg_i (
+    .clk        ( clk           ),
+    .rstn_i     ( rstn_i        ),
+    .dbg_bus    ( dbg_bus       ),
+    .halt_core_o( halt_core     ),
+    .rs_o       ( dbg_rs        ),
+    .rs_di      ( dbg_rsd       ),
+    .rd_o       ( dbg_rd        ),
+    .rd_do      ( dbg_rdd       ),
+    .flush_o    ( dbg_flush     ),
+    .pc_o       ( dbg_pc        )
+);
 
 registerFile registerFile_i (
     .clk        ( clk         ),
     .rstn_i     ( rstn_i      ),
-    .rd         ( WB_REG_rd   ),
-    .rs1        ( ID_REG_rs1  ),
-    .rs2        ( ID_REG_rs2  ),
-    .data_rd_i  ( WB_REG_data ),
-    .data_rs1_o ( REG_ID_rs1_d),
-    .data_rs2_o ( REG_ID_rs2_d)
+    .rd         ( REG_rd      ),
+    .rs1        ( REG_rs1     ),
+    .rs2        ( REG_rs2     ),
+    .data_rd_i  ( REG_rdd     ),
+    .data_rs1_o ( REG_rs1_d   ),
+    .data_rs2_o ( REG_rs2_d   )
 );
 
 IF_stage IF_i (
     .clk         ( clk           ),
     .rstn_i      ( rstn_i        ),
     .flush_i     ( flush         ),
-    .halt_i      ( halt_core_i   ),
+    .halt_i      ( halt_core     ),
     .ack_i       ( ID_IF_ack     ),
     .valid_o     ( IF_ID_valid   ),
     .instr_o     ( IF_ID_instr   ),
@@ -106,14 +161,14 @@ IF_stage IF_i (
     .wb_bus      ( IF_wb_bus     ),
     //Branching
     .branch_i    ( branch        ),
-    .pc_i        ( EX_MEM_result )
+    .pc_i        ( IF_pc_i       )
 );
 
 ID_stage ID_i (
     .clk      ( clk          ),
     .rstn_i   ( rstn_i       ),
     .flush_i  ( flush        ),
-    .halt_i   ( halt_core_i  ),
+    .halt_i   ( halt_core    ),
     .valid_i  ( IF_ID_valid  ),
     .ack_o    ( ID_IF_ack    ),
     .instr_i  ( IF_ID_instr  ),
@@ -136,7 +191,7 @@ EX_stage EX_i (
     .clk      ( clk           ),
     .rstn_i   ( rstn_i        ),
     .flush_i  ( flush         ),
-    .halt_i   ( halt_core_i   ),
+    .halt_i   ( halt_core     ),
     .valid_i  ( ID_EX_valid   ),
     .ack_o    ( EX_ID_ack     ),
     .instr_i  ( ID_EX_instr   ),
@@ -156,7 +211,7 @@ EX_stage EX_i (
 MEM_stage MEM_i (
     .clk         ( clk           ),
     .rstn_i      ( rstn_i        ),
-    .halt_i      ( halt_core_i   ),
+    .halt_i      ( halt_core     ),
     .valid_i     ( EX_MEM_valid  ),
     .ack_o       ( MEM_EX_ack    ),
     .pc_i        ( EX_MEM_pc     ),
@@ -173,7 +228,7 @@ MEM_stage MEM_i (
 WB_stage WB_i (
     .clk     ( clk          ),
     .rstn_i  ( rstn_i       ),
-    .halt_i  ( halt_core_i   ),
+    .halt_i  ( halt_core    ),
     .ack_o   ( WB_MEM_ack   ),
     .valid_i ( MEM_WB_valid ),
     .instr_i ( MEM_WB_instr ),

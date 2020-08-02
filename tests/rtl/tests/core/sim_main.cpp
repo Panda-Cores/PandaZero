@@ -16,6 +16,32 @@ int read(int addr){
     return (int) tb->m_core->dbg_data_o;
 }
 
+int read_reg(int reg){
+    while(tb->m_core->dbg_ready_o == 0)
+        tb->tick();
+    tb->m_core->dbg_addr_i = reg;
+    tb->m_core->dbg_cmd_i = 0x10;
+    tb->tick();
+    while(tb->m_core->dbg_ready_o == 0)
+        tb->tick();
+    tb->m_core->dbg_cmd_i = 0x0;
+    return (int) tb->m_core->dbg_data_o;
+    tb->tick();
+}
+
+void write_reg(int reg, int data){
+    while(tb->m_core->dbg_ready_o == 0)
+        tb->tick();
+    tb->m_core->dbg_addr_i = reg;
+    tb->m_core->dbg_cmd_i = 0x20;
+    tb->m_core->dbg_data_i = data;
+    tb->tick();
+    while(tb->m_core->dbg_ready_o == 0)
+        tb->tick();
+    tb->m_core->dbg_cmd_i = 0x0;
+    tb->tick();
+}
+
 void write(int addr, int data){
     while(tb->m_core->dbg_ready_o == 0)
         tb->tick();
@@ -56,6 +82,23 @@ void load_program(int program[1024], int len){
     halt_core();
     for(int i = 0; i < len; i++)
         write(i*4, program[i]);
+}
+
+int test_registers(){
+    // Register 0 should never be changed
+    write_reg(0x0, 0xff);
+    if(read_reg(0x0) != 0x0)
+        return 1;
+    
+    for(int i = 1; i < 32; i++){
+        write_reg(i, 0xf00+i);
+        if(read_reg(i) != (0xf00+i))
+            return i;
+        // Clear register again
+        write_reg(i, 0x0);
+    }
+
+    return 0;
 }
 
 int main(int argc, char** argv, char** env) {
@@ -102,6 +145,13 @@ int main(int argc, char** argv, char** env) {
 
     // Stop the core
     halt_core();
+
+    // Test reading and writing to register        
+    result = test_registers();
+    if(result != 0){
+        std::cout << "FAILED " << result << std::endl;
+        exit(0);
+    }
     // Load the program
     load_program(program, 0x17);
     // Resume the core
