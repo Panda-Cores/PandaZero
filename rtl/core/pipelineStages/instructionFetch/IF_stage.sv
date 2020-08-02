@@ -30,7 +30,9 @@ module IF_stage (
     wb_bus_t.master      wb_bus,
     //Branching
     input logic [31:0]   pc_i,
-    input logic          branch_i
+    input logic          branch_i,
+    //Debug
+    output logic [31:0]  dbg_pc_o
 );
 
 logic incr_pc;
@@ -51,6 +53,7 @@ struct packed {
 assign valid_o = data_q.valid;
 assign instr_o = data_q.instr;
 assign pc_o = data_q.pc;
+assign dbg_pc_o = pc_q;
 
 load_unit lu_i
 (
