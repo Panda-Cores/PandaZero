@@ -40,10 +40,6 @@ logic                IF_ID_valid;
 logic [31:0]         IF_ID_instr;
 logic [31:0]         IF_ID_pc;
 
-//EX-IF (branch)
-logic                branch;
-logic [31:0]         EX_IF_pc;
-
 //ID-EX
 logic                EX_ID_ack;
 logic                ID_EX_valid;
@@ -87,8 +83,9 @@ logic [31:0]         REG_rs1_d;
 logic [31:0]         REG_rs2_d;
 
 // Branching
+logic                branch;
 logic                flush;
-logic [31:0]         IF_pc_i;
+logic [31:0]         IF_pc;
 
 // Debug signals
 logic                halt_core;
@@ -98,12 +95,13 @@ logic [4:0]          dbg_rd;
 logic [31:0]         dbg_rdd;
 logic [31:0]         dbg_rsd;
 logic [31:0]         dbg_pc;
+logic [31:0]         dbg_curr_pc;
 
 // Flush pipeline in case of taken branch
 // or request by debug module
 assign flush = branch | dbg_flush;
 // If flushed by debug module, set the requested pc
-assign IF_pc_i = (dbg_flush) ? EX_MEM_result : dbg_pc;
+assign IF_pc = (dbg_flush) ? dbg_pc : EX_MEM_result;
 
 // Mux debug module and core to register file
 always_comb
@@ -135,7 +133,8 @@ core_dbg_module core_dbg_i (
     .rd_o       ( dbg_rd        ),
     .rd_do      ( dbg_rdd       ),
     .flush_o    ( dbg_flush     ),
-    .pc_o       ( dbg_pc        )
+    .pc_i       ( dbg_curr_pc   ),
+    .pc_o       ( dbg_pc   )
 );
 
 registerFile registerFile_i (
@@ -159,9 +158,9 @@ IF_stage IF_i (
     .instr_o     ( IF_ID_instr   ),
     .pc_o        ( IF_ID_pc      ),
     .wb_bus      ( IF_wb_bus     ),
-    //Branching
     .branch_i    ( branch        ),
-    .pc_i        ( IF_pc_i       )
+    .pc_i        ( IF_pc         ),
+    .dbg_pc_o    ( dbg_curr_pc   )
 );
 
 ID_stage ID_i (

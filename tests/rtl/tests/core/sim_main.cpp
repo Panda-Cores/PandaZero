@@ -20,20 +20,19 @@ int read_reg(int reg){
     while(tb->m_core->dbg_ready_o == 0)
         tb->tick();
     tb->m_core->dbg_addr_i = reg;
-    tb->m_core->dbg_cmd_i = 0x10;
+    tb->m_core->dbg_cmd_i = 0x13;
     tb->tick();
     while(tb->m_core->dbg_ready_o == 0)
         tb->tick();
     tb->m_core->dbg_cmd_i = 0x0;
     return (int) tb->m_core->dbg_data_o;
-    tb->tick();
 }
 
 void write_reg(int reg, int data){
     while(tb->m_core->dbg_ready_o == 0)
         tb->tick();
     tb->m_core->dbg_addr_i = reg;
-    tb->m_core->dbg_cmd_i = 0x20;
+    tb->m_core->dbg_cmd_i = 0x14;
     tb->m_core->dbg_data_i = data;
     tb->tick();
     while(tb->m_core->dbg_ready_o == 0)
@@ -52,12 +51,13 @@ void write(int addr, int data){
     while(tb->m_core->dbg_ready_o == 0)
         tb->tick();
     tb->m_core->dbg_cmd_i = 0x0;
+    tb->tick();
 }
 
 void halt_core(){
     while(tb->m_core->dbg_ready_o == 0)
         tb->tick();
-    tb->m_core->dbg_cmd_i = 0x03;
+    tb->m_core->dbg_cmd_i = 0x11;
     tb->tick();
     tb->m_core->dbg_cmd_i = 0x0;
 }
@@ -65,7 +65,7 @@ void halt_core(){
 void resume_core(){
     while(tb->m_core->dbg_ready_o == 0)
         tb->tick();
-    tb->m_core->dbg_cmd_i = 0x04;
+    tb->m_core->dbg_cmd_i = 0x12;
     tb->tick();
     tb->m_core->dbg_cmd_i = 0x0;
 }
@@ -73,15 +73,39 @@ void resume_core(){
 void reset_core(){
     while(tb->m_core->dbg_ready_o == 0)
         tb->tick();
-    tb->m_core->dbg_cmd_i = 0x05;
+    tb->m_core->dbg_cmd_i = 0x03;
     tb->tick();
     tb->m_core->dbg_cmd_i = 0x0;
 }
 
-void load_program(int program[1024], int len){
+int read_pc(){
+    while(tb->m_core->dbg_ready_o == 0)
+        tb->tick();
+    tb->m_core->dbg_cmd_i = 0x15;
+    tb->tick();
+    while(tb->m_core->dbg_ready_o == 0)
+        tb->tick();
+    tb->m_core->dbg_cmd_i = 0x0;
+    return (int) tb->m_core->dbg_data_o;
+}
+
+void set_pc(int pc){
+    while(tb->m_core->dbg_ready_o == 0)
+        tb->tick();
+    tb->m_core->dbg_cmd_i = 0x16;
+    tb->m_core->dbg_data_i = pc;
+    tb->tick();
+    while(tb->m_core->dbg_ready_o == 0)
+        tb->tick();
+    tb->m_core->dbg_cmd_i = 0x0;
+    tb->tick();
+}
+
+void load_program(int program[1024], int len, int startAddr){
     halt_core();
-    for(int i = 0; i < len; i++)
-        write(i*4, program[i]);
+    for(int i = 0; i < len; i++){
+        write(startAddr + 4*i, program[i]);
+    }
 }
 
 int test_registers(){
@@ -102,7 +126,7 @@ int test_registers(){
 }
 
 int main(int argc, char** argv, char** env) {
-    int program[32];
+    int program[1024];
 
     program[0x0]      = 0b00000001000000000000000010010011;     // addi 16, x0, x1;
     program[0x1]      = 0b00000000000100010000000100010011;     // addi 1, x2, x2;
@@ -132,6 +156,7 @@ int main(int argc, char** argv, char** env) {
     int exp_mem[10][2];
     exp_mem[0][0] = 0x18;
     exp_mem[0][1] = 0x12;
+    
     Verilated::commandArgs(argc, argv);
     tb = new TESTBENCH<Vcore_wrapper>();
     tb->opentrace("logs/trace.vcd");
@@ -149,12 +174,13 @@ int main(int argc, char** argv, char** env) {
     // Test reading and writing to register        
     result = test_registers();
     if(result != 0){
-        std::cout << "FAILED " << result << std::endl;
+        std::cout << "regcheck FAILED " << result << std::endl;
         exit(0);
     }
     // Load the program
-    load_program(program, 0x17);
+    load_program(program, 0x17, 0x4);
     // Resume the core
+    set_pc(0x4);
     resume_core();
 
     for(int i = 0; i < 1000; i++){

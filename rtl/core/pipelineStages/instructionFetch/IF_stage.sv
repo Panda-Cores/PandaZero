@@ -30,7 +30,9 @@ module IF_stage (
     wb_bus_t.master      wb_bus,
     //Branching
     input logic [31:0]   pc_i,
-    input logic          branch_i
+    input logic          branch_i,
+    //Debug
+    output logic [31:0]  dbg_pc_o
 );
 
 logic incr_pc;
@@ -51,6 +53,7 @@ struct packed {
 assign valid_o = data_q.valid;
 assign instr_o = data_q.instr;
 assign pc_o = data_q.pc;
+assign dbg_pc_o = pc_q;
 
 load_unit lu_i
 (
@@ -92,12 +95,12 @@ always_ff @(posedge clk, negedge rstn_i)
 begin
     if(!rstn_i) begin
         data_q <= 'b0;
-    end else if(!halt_i) begin
+    end else begin
         data_q <= data_n;
 
         if(branch_i || flush_i)
             pc_q <= pc_i;
-        else if(incr_pc)
+        else if(incr_pc && !halt_i)
             pc_q <= pc_q + 4;
     end
 end
