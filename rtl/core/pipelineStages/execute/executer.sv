@@ -101,10 +101,13 @@ begin
             alu_d1_mux      = 1'b1;
         end
 
+        /* verilator lint_off CASEOVERLAP */
         `FENCE, `ECALL, `EBREAK: begin
             // As of now, just NOPs
             operation = `ADDITION;
         end
+        /* verilator lint_on CASEOVERLAP */
+        
 
         default: begin
         end

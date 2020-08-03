@@ -87,7 +87,7 @@ begin
         `AUIPC: begin
             imm = {instr[31:12], 12'b0};
         end
-
+        /* verilator lint_off CASEOVERLAP */
         `FENCE, `ECALL, `EBREAK: begin
             // As of now, just NOPs
             rs1 = 5'b0;
@@ -95,7 +95,8 @@ begin
             rd  = 5'b0;
             imm = 'b0;
         end
-
+        /* verilator lint_on CASEOVERLAP */
+        
         default: begin
             invalid = 1'b1;
         end
