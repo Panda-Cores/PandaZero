@@ -2,14 +2,13 @@
 A RISC-V processor, destined to become a microcontroller!
 
 Quick overview:
-* RV32I ISA (Missing instructions: FENCE, ECALL, EBREAK)
-* 5 Stage Pipeline (IF, ID, EX, MEM, WB)
-* Pipeline hazard detection & mitigation in hardware
+* RV32I ISA
+* 5 Stage Pipeline
+* Pipeline hazard detection & mitigation by HW via pipeline stalls
 * Core connected to wishbone bus
 * Debug module (not consistent with RV spec for debug modules, but supports extensive testing)
 
 Upcoming features/improvements (in order of priority):
-* Remaining instructions (FENCE, ECALL, EBREAK)
 * L1 Instruction and data cache
 * EEI
 * Exception raising on illegal instruction
