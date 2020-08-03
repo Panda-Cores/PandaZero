@@ -100,6 +100,12 @@ begin
             branch_taken    = 1'b1;
             alu_d1_mux      = 1'b1;
         end
+
+        `FENCE, `ECALL, `EBREAK: begin
+            // As of now, just NOPs
+            operation = `ADDITION;
+        end
+
         default: begin
         end
     endcase
