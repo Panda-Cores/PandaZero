@@ -13,17 +13,17 @@
 ../../../../rtl/memory/ram.sv
 ../../../../rtl/memory/wb_ram_wrapper.sv
 
-../../../../common/wishbone/src/wb_xbar.sv
-../../../../common/wishbone/src/wb_master.sv
-../../../../common/wishbone/src/wb_slave.sv
--I../../../../common/wishbone/includes
+../../../../ips/wishbone/src/wb_xbar.sv
+../../../../ips/wishbone/src/wb_master.sv
+../../../../ips/wishbone/src/wb_slave.sv
+-I../../../../ips/wishbone/includes
 
-../../../../common/load_store_unit/src/load_unit.sv
-../../../../common/load_store_unit/src/store_unit.sv
-../../../../common/load_store_unit/src/lsu.sv
+../../../../ips/load_store_unit/src/load_unit.sv
+../../../../ips/load_store_unit/src/store_unit.sv
+../../../../ips/load_store_unit/src/lsu.sv
 
-../../../../common/dbg_module/src/dbg_module.sv
-../../../../common/dbg_module/src/core_dbg_module.sv
--I../../../../common/dbg_module/includes
+../../../../ips/debug_module/src/dbg_module.sv
+../../../../ips/debug_module/src/core_dbg_module.sv
+-I../../../../ips/debug_module/includes
 
 -I../../../../rtl/includes
