@@ -1,3 +1,9 @@
-[submodule "common"]
-	path = common
-	url = git@github.com:Panda-Cores/common.git
+[submodule "ips/timer_module"]
+	path = ips/timer_module
+	url = git@github.com:Panda-Cores/timer_module.git
+[submodule "ips/load_store_unit"]
+	path = ips/load_store_unit
+	url = git@github.com:Panda-Cores/load_store_unit.git
+[submodule "ips/wishbone"]
+	path = ips/wishbone
+	url = git@github.com:Panda-Cores/wishbone.git
