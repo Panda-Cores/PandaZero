@@ -51,14 +51,32 @@ begin
     end else begin
         if(en_i) begin
             case(we_i)
-                4'b1111:
-                    data[addr] <= din_i;
+                4'b1111: begin
+                    unique case(addr_i[1:0])
+                        2'b00 : data[addr] <= din_i;
+                        2'b01 : begin data[addr][31:8] <= din_i[23:0]; data[addr+1][7:0] <= din_i[31:24]; end
+                        2'b10 : begin data[addr][31:16] <= din_i[15:0]; data[addr+1][15:0] <= din_i[31:16]; end
+                        2'b11 : begin data[addr][31:24] <= din_i[7:0]; data[addr+1][23:0] <= din_i[31:8]; end
+                    endcase
+                end
                 
-                4'b0011:
-                    data[addr][15:0] <= din_i[15:0];
+                4'b0011: begin
+                    unique case(addr_i[1:0])
+                        2'b00 : data[addr][15:0] <= din_i[15:0];
+                        2'b01 : begin data[addr][23:8] <= din_i[15:0]; end
+                        2'b10 : begin data[addr][31:16] <= din_i[15:0]; end
+                        2'b11 : begin data[addr][31:24] <= din_i[7:0]; data[addr+1][7:0] <= din_i[15:8]; end
+                    endcase
+                end
                 
-                4'b0001:
-                    data[addr][7:0] <= din_i[7:0];
+                4'b0001: begin
+                    unique case(addr_i[1:0])
+                        2'b00 : data[addr][7:0] <= din_i[7:0];
+                        2'b01 : begin data[addr][15:8] <= din_i[7:0]; end
+                        2'b10 : begin data[addr][23:16] <= din_i[7:0]; end
+                        2'b11 : begin data[addr][31:24] <= din_i[7:0]; end
+                    endcase
+                end
                 
                 default: begin
                 end
