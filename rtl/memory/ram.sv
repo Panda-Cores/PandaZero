@@ -35,8 +35,14 @@ assign addr = $signed(addr_i >> 2);
 
 always_comb
 begin
-    if(en_i)
-        dout_o = data[addr];
+    if(en_i) begin
+        unique case(addr_i[1:0])
+            2'b00 : dout_o = data[addr];
+            2'b01 : dout_o = {data[addr][31:8] , data[addr+1][7:0] };
+            2'b10 : dout_o = {data[addr][31:16], data[addr+1][15:0]};
+            2'b11 : dout_o = {data[addr][31:24], data[addr+1][23:0]};
+        endcase
+    end
 end
 
 always_ff @(posedge clk, negedge rstn_i)
