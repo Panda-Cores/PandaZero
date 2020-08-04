@@ -1,8 +1,10 @@
+#include "address_test.h"
+
 int main() {
-    int *addr = (int*)100;
-    for(int i = 0; i < 10; i++) {
-        (*addr) = i;
-        addr+=1;
-    }
+    unsigned int *magic_addr = (unsigned int*) 0x7ff0;
+    int result = address_test();
+
+    *(magic_addr) = result + 1;
+    
     while(1);
 }

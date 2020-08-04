@@ -10,7 +10,7 @@ build:
 	@if [ ! -d "./build" ]; then mkdir build; fi
 
 %: %.c build
-	riscv64-unknown-linux-gnu-gcc ../../common/crt.s $< $(RISCV_GCC_OPTS) -o build/$@ $(RISCV_LINK_OPTS)
+	riscv64-unknown-linux-gnu-gcc ../../common/crt.s $< address_test.c $(RISCV_GCC_OPTS) -o build/$@ $(RISCV_LINK_OPTS)
 	@riscv64-unknown-linux-gnu-objdump $(RISCV_OBJDUMP_OPTS) build/$@ > build/$@.dmp
 	@riscv64-unknown-linux-gnu-objcopy -O binary build/$@ build/$@.bin
 	@hexdump build/$@.bin > main.hex.dmp

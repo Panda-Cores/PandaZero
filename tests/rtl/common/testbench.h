@@ -247,7 +247,7 @@ template<class MODULE>	class TESTBENCH {
 
 
 		int check_memory(int *exp_mem, int n_checks){
-			for(int i = 0; i < 10; i++){
+			for(int i = 0; i < n_checks; i++){
 				if(this->read_mem(exp_mem[i*2]) != exp_mem[i*2+1])
 					return i+1;
 			}
