@@ -53,8 +53,8 @@ struct packed {
 logic load;
 logic store;
 logic lsu_valid;
-logic lsu_valid_n;
-logic lsu_valid_q;
+logic lsu_rvalid_n, lsu_rvalid_q;
+logic lsu_wvalid_n, lsu_wvalid_q;
 logic [31:0] lu_data;
 logic [3:0] lsu_we;
 
@@ -77,7 +77,8 @@ lsu lsu_i(
 
 always_comb
 begin
-    lsu_valid_n = lsu_valid_q;
+    lsu_rvalid_n = lsu_rvalid_q;
+    lsu_wvalid_n = lsu_wvalid_q;
     data_n  = data_q;
     ack_o   = 1'b0;
     load    = 1'b0;
@@ -87,21 +88,24 @@ begin
     // Data is no longer valid if we recieved and ack
     if(ack_i) begin
         data_n.valid = 1'b0;
-        lsu_valid_n = 1'b0;
+        lsu_rvalid_n = 1'b0;
+        lsu_wvalid_n = 1'b0;
     end
 
     case(instr_i[6:0])
         // In case of LOAD or STORE, we give the respective signal
         // to the memory and wait for the next stage to ack
         `LOAD: begin
-            if(!lsu_valid_q) begin
-                lsu_valid_n = lsu_valid;
+            lsu_wvalid_n   = 1'b0;
+            if(!lsu_rvalid_q) begin
+                lsu_rvalid_n = lsu_valid;
                 load        = 1'b1;
             end else if((!data_q.valid || ack_i) && valid_i) begin
                 ack_o          = 1'b1;
                 data_n.valid   = 1'b1;
                 data_n.instr   = instr_i;
-                lsu_valid_n    = 1'b0;
+                lsu_rvalid_n   = 1'b0;
+                lsu_wvalid_n   = 1'b0;
                 case(instr_i[13:12])
                     2'b00:
                         data_n.data = {{24{lu_data[7]}}, lu_data[7:0]};
@@ -118,8 +122,9 @@ begin
         // In case of LOAD or STORE, we give the respective signal
         // to the memory and wait for the next stage to ack
         `STORE: begin
-            if(!lsu_valid_q) begin
-                lsu_valid_n  = lsu_valid;
+            lsu_rvalid_n   = 1'b0;
+            if(!lsu_wvalid_q) begin
+                lsu_wvalid_n  = lsu_valid;
                 store        = 1'b1;
                 // Write the correct amount of bytes
                 case(instr_i[13:12])
@@ -135,13 +140,16 @@ begin
             end else if((!data_q.valid || ack_i) && valid_i)begin
                 ack_o          = 1'b1;
                 data_n         = {1'b1, instr_i, 32'b0};
-                lsu_valid_n    = 1'b0;
+                lsu_rvalid_n   = 1'b0;
+                lsu_wvalid_n    = 1'b0;
             end
         end
 
         // In case of these, we can directly give the data to the
         // following stage, the pointer to the old next instr (pc+4)
         `AUIPC, `JAL, `JALR: begin
+            lsu_rvalid_n   = 1'b0;
+            lsu_wvalid_n   = 1'b0;
             if((!data_q.valid || ack_i) && valid_i) begin
                 ack_o          = 1'b1;
                 data_n         = {1'b1, instr_i, pc_i + 4};
@@ -155,7 +163,9 @@ begin
         // the time per instruction reduces by 1, but the load/store
         // unit can work in parallel when other instructions are
         // processed.
-        default: begin            
+        default: begin   
+            lsu_rvalid_n   = 1'b0;
+            lsu_wvalid_n   = 1'b0;         
             if((!data_q.valid || ack_i) && valid_i) begin
                 ack_o          = 1'b1;
                 data_n         = {1'b1, instr_i, result_i};
@@ -169,7 +179,8 @@ always_ff @(posedge clk, negedge rstn_i) begin
         data_q <= 'b0;
     end else if(!halt_i) begin
         data_q <= data_n;
-        lsu_valid_q <= lsu_valid_n;
+        lsu_wvalid_q <= lsu_wvalid_n;
+        lsu_rvalid_q <= lsu_rvalid_n;
     end
 end
 

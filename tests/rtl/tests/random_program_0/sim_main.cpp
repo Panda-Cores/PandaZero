@@ -147,8 +147,8 @@ int main(int argc, char** argv, char** env) {
     // fclose(fp);
     // if(line != NULL){free(line);}
     for(int i = 0; i < 10; i++){
-        exp_mem[i][0] = 100+i;
-        exp_mem[i][1] = 12;
+        exp_mem[i][0] = 100+i*4;
+        exp_mem[i][1] = i;
     }
     
     Verilated::commandArgs(argc, argv);
@@ -166,11 +166,11 @@ int main(int argc, char** argv, char** env) {
     halt_core();
 
     // Test reading and writing to register        
-    // result = test_registers();
-    // if(result != 0){
-    //     std::cout << "regcheck FAILED " << result << std::endl;
-    //     exit(0);
-    // }
+    result = test_registers();
+    if(result != 0){
+        std::cout << "regcheck FAILED " << result << std::endl;
+        exit(0);
+    }
     // Load the program
     load_program(program, instr_cnt, 0x0);
     // Resume the core
