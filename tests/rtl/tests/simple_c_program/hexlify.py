@@ -11,7 +11,7 @@ for line in hexdmp:
             newline = line[i+1] + line[i]
             if(len(newline) == 8):
                 nicehex.write(newline + '\n')
-                print(newline + '  ' + bin(int(newline,16)))
+                # print(newline + '  ' + bin(int(newline,16)))
 
 hexdmp.close()
 nicehex.close()

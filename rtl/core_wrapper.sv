@@ -74,7 +74,7 @@ dbg_module dbg_module_i (
 );
 
 wb_ram_wrapper #(
-  .SIZE (1024)
+  .SIZE (2048)
 ) ram_i (
   .clk    ( clk       ),
   .rstn_i ( rstn_i    ),

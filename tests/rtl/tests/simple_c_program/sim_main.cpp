@@ -131,6 +131,7 @@ int main(int argc, char** argv, char** env) {
     size_t len = 0;
     ssize_t read;
     char * line = NULL;
+    int exp_mem[10][2];
     FILE *fp;
     fp = fopen("main.hex", "r");
     if(fp){
@@ -143,16 +144,12 @@ int main(int argc, char** argv, char** env) {
         exit(-10);
     }
 
-    fclose(fp);
-    if(line)
-        free(line);
-
-    for(int i = 0; i < instr_cnt; i++)
-        printf("%X\n", program[i]);
-
-    int exp_mem[10][2];
-    exp_mem[0][0] = 0x18;
-    exp_mem[0][1] = 0x12;
+    // fclose(fp);
+    // if(line != NULL){free(line);}
+    for(int i = 0; i < 10; i++){
+        exp_mem[i][0] = 100+i;
+        exp_mem[i][1] = 12;
+    }
     
     Verilated::commandArgs(argc, argv);
     tb = new TESTBENCH<Vcore_wrapper>();
@@ -184,10 +181,12 @@ int main(int argc, char** argv, char** env) {
         tb->tick();
     }
     int data;
-    if(data = read_mem(exp_mem[0][0]*4) != exp_mem[0][1])
-        std::cout << "FAILED " << data << std::endl;
-    else
-        std::cout << "PASSED" << std::endl;
+    for(int i = 0; i < 10; i++){
+        if(data = read_mem(exp_mem[i][0]) != exp_mem[i][1])
+            std::cout << "FAILED " << data << std::endl;
+        else
+            std::cout << "PASSED" << std::endl;
+    }
     
 
     // Cleanup

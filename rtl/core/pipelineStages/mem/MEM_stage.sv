@@ -85,8 +85,10 @@ begin
     lsu_we  = 'b0;
 
     // Data is no longer valid if we recieved and ack
-    if(ack_i)
+    if(ack_i) begin
         data_n.valid = 1'b0;
+        lsu_valid_n = 1'b0;
+    end
 
     case(instr_i[6:0])
         // In case of LOAD or STORE, we give the respective signal
