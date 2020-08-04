@@ -1,0 +1,31 @@
+
+build/test:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+00010074 <_start>:
+   10074:	00001137          	lui	sp,0x1
+   10078:	0040006f          	j	1007c <main>
+
+0001007c <main>:
+   1007c:	fe010113          	addi	sp,sp,-32 # fe0 <_start-0xf094>
+   10080:	00812e23          	sw	s0,28(sp)
+   10084:	02010413          	addi	s0,sp,32
+   10088:	06400793          	li	a5,100
+   1008c:	fef42623          	sw	a5,-20(s0)
+   10090:	fe042423          	sw	zero,-24(s0)
+   10094:	0280006f          	j	100bc <main+0x40>
+   10098:	fec42783          	lw	a5,-20(s0)
+   1009c:	fe842703          	lw	a4,-24(s0)
+   100a0:	00e7a023          	sw	a4,0(a5)
+   100a4:	fec42783          	lw	a5,-20(s0)
+   100a8:	01078793          	addi	a5,a5,16
+   100ac:	fef42623          	sw	a5,-20(s0)
+   100b0:	fe842783          	lw	a5,-24(s0)
+   100b4:	00178793          	addi	a5,a5,1
+   100b8:	fef42423          	sw	a5,-24(s0)
+   100bc:	fe842703          	lw	a4,-24(s0)
+   100c0:	00900793          	li	a5,9
+   100c4:	fce7dae3          	bge	a5,a4,10098 <main+0x1c>
+   100c8:	0000006f          	j	100c8 <main+0x4c>
