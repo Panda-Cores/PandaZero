@@ -245,7 +245,7 @@ template<class MODULE>	class TESTBENCH {
 			this->resume_core();
 		}
 
-
+		// Check a bunch of memory addresses for the expected results
 		int check_memory(int *exp_mem, int n_checks){
 			for(int i = 0; i < n_checks; i++){
 				if(this->read_mem(exp_mem[i*2]) != exp_mem[i*2+1])

@@ -19,3 +19,4 @@
 *.xpr
 .Xil
 *.zip
+*result.txt

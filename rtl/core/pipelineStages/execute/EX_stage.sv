@@ -63,7 +63,7 @@ executer executer_i (
     .branch_taken ( branch  )
 );
 
-assign valid_o  = (flush_i) ? 1'b0 : data_q.valid;
+assign valid_o  = data_q.valid;
 assign instr_o  = data_q.instr;
 assign pc_o     = data_q.pc;
 assign result_o = data_q.result;
@@ -82,7 +82,7 @@ begin
     // If data is not valid or ack received, we wait for the
     // previous stage to be valid. If this is the case, we set our
     // data and set valid=1
-    if((!data_q.valid || ack_i) && valid_i) begin
+    if((!data_q.valid || ack_i) && valid_i && (!flush_i)) begin
         ack_o          = 1'b1;
         data_n         = {1'b1, branch, instr_i, pc_i, result, rs2_i};
     end

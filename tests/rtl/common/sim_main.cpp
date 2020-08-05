@@ -10,13 +10,6 @@ int main(int argc, char** argv, char** env) {
     tb->opentrace("logs/trace.vcd");
 
     int result = 0;
-    int exp_mem[11][2];    
-    for(int i = 0; i < 10; i++){
-        exp_mem[i][0] = 200+i*4;
-        exp_mem[i][1] = i;
-    }
-    exp_mem[10][0] = 0x7ff0;
-    exp_mem[10][1] = 1;
 
     tb->load_program((char*) "main.hex", 0x0);
 
@@ -24,7 +17,10 @@ int main(int argc, char** argv, char** env) {
         tb->tick();
     }
 
-    result = tb->check_memory((int*) exp_mem, 11);
+    // The test result+1 is written into the magic address
+    // in order to prevent reading a success if the memory was 
+    // uninitialized (e.g. remains 0)
+    result = tb->read_mem(0x7ff0) - 1;
 
     // Cleanup
     tb->tick();
