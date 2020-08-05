@@ -19,7 +19,6 @@ int functions(){
     int test;
     test = int_fun(20);
     if(test != 20) return 1;
-
     void_fun(10);
     if(test != 20) return 2;
 
