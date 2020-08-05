@@ -51,6 +51,7 @@ logic [31:0]    reg_lock_n;
 logic [31:0]    reg_lock_q;
 
 logic [4:0]     rd;
+logic [4:0]     rd_n, rd_q;
 logic           invalid;
 
 // immediate value
@@ -88,6 +89,7 @@ always_comb
 begin
     data_n = data_q;
     ack_o   = 1'b0;
+    rd_n    = rd_q;
     reg_lock_n = reg_lock_q;
 
     // Free the register that WB stage writes into
@@ -109,13 +111,17 @@ begin
         if(!reg_lock_q[rs1a_o] && !reg_lock_q[rs2a_o] && ! invalid) begin
             ack_o          = 1'b1;
             data_n         = {1'b1, instr_i, pc_i, rs1d_i, rs2d_i, imm};
+            rd_n           = rd;
             reg_lock_n[rd] = 1'b1;
         end
     end
 
     // Invalidate if flush
-    if(flush_i)
+    if(flush_i) begin
         data_n.valid = 1'b0;
+        reg_lock_n[rd_q] = 1'b0;
+        reg_lock_n[rd] = 1'b0;
+    end
     
     // register 0 is never locked
     reg_lock_n[0] = 1'b0;
@@ -128,6 +134,7 @@ begin
         reg_lock_q <= 'b0;
     end else if(!halt_i) begin
         data_q     <= data_n;
+        rd_q       <= rd_n;
         reg_lock_q <= reg_lock_n;
     end
 end
