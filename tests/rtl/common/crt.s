@@ -1,5 +1,5 @@
 .globl _start
 _start:
-    li sp,0x7000
+    li sp,0x6000
     j main
     

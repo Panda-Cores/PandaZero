@@ -13,14 +13,18 @@ int main(int argc, char** argv, char** env) {
 
     tb->load_program((char*) "main.hex", 0x0);
 
-    for(int i = 0; i < 1000; i++){
-        tb->tick();
+    for(int i = 0; i < 100; i++){
+        for(int j = 0; j < 200; j++)
+            tb->tick();
+
+        if(result = tb->read_mem(0x7ff0) != 0)
+            break;
     }
 
     // The test result+1 is written into the magic address
     // in order to prevent reading a success if the memory was 
     // uninitialized (e.g. remains 0)
-    result = tb->read_mem(0x7ff0) - 1;
+    result -= 1;
 
     // Cleanup
     tb->tick();
