@@ -1,1 +1,1 @@
-int address_test();
+int mem_access();
