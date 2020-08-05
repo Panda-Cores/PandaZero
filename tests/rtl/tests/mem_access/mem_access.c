@@ -1,4 +1,4 @@
-int address_test(){
+int mem_access(){
     unsigned int *addr = (int*) 0x200;
 
     for(int i = 0; i < 10; i++){

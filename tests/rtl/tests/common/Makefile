@@ -3,6 +3,8 @@ RISCV_GCC_OPTS ?= -DPREALLOCATE=1 -mcmodel=medany -march=rv32i -mabi=ilp32 -stat
 RISCV_LINK_OPTS ?= -march=rv32i -mabi=ilp32 -static -nostdlib -nostartfiles -lm -lgcc
 RISCV_OBJDUMP_OPTS ?= -d
 
+CURRENT_TEST = $(addsuffix .c, $(notdir $(shell pwd)))
+
 default: main
 
 .PHONY: build
@@ -10,7 +12,7 @@ build:
 	@if [ ! -d "./build" ]; then mkdir build; fi
 
 %: %.c build
-	riscv64-unknown-linux-gnu-gcc ../../common/crt.s $< address_test.c $(RISCV_GCC_OPTS) -o build/$@ $(RISCV_LINK_OPTS)
+	riscv64-unknown-linux-gnu-gcc ../../common/crt.s $< $(CURRENT_TEST) $(RISCV_GCC_OPTS) -o build/$@ $(RISCV_LINK_OPTS)
 	@riscv64-unknown-linux-gnu-objdump $(RISCV_OBJDUMP_OPTS) build/$@ > build/$@.dmp
 	@riscv64-unknown-linux-gnu-objcopy -O binary build/$@ build/$@.bin
 	@hexdump build/$@.bin > main.hex.dmp
