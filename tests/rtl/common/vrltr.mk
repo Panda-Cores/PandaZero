@@ -49,14 +49,12 @@ run:
 
 	@echo
 	@echo "-- COMPILE -----------------"
-	# $(MAKE) -j 4 -C obj_dir -f top.mk 
 	$(MAKE) -j 4 -C obj_dir -f Vcore_wrapper.mk 
 	
 
 	@echo
 	@echo "-- RUN ---------------------"
 	@mkdir -p logs
-	# obj_dir/top --trace > result.txt
 	obj_dir/Vcore_wrapper --trace > result.txt
 
 	@echo

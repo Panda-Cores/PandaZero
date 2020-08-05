@@ -1,0 +1,1 @@
+int mem_access();

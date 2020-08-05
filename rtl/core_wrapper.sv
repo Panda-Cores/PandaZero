@@ -40,7 +40,7 @@ logic dbg_periph_rst_req;
 
 // Wishbone busses
 wb_bus_t#(.TAGSIZE(1)) masters[3];
-wb_bus_t#(.TAGSIZE(1)) slaves[1];
+wb_bus_t#(.TAGSIZE(1)) slaves[2];
 
 // Debug bus
 dbg_intf dbg_bus;
@@ -73,23 +73,38 @@ dbg_module dbg_module_i (
   .wb_bus           ( masters[0]        )
 );
 
+
+`define ROM_START_ADDR 32'h0
+`define ROM_END_ADDR 32'h3fff
+`define RAM_START_ADDR 32'h4000
+`define RAM_END_ADDR 32'h7fff
+
+// Not really a rom, just the name so far...
 wb_ram_wrapper #(
-  .SIZE (32)
-) ram_i (
+  .SIZE (16384)
+) rom_i (
   .clk    ( clk       ),
   .rstn_i ( rstn_i    ),
   .wb_bus ( slaves[0] )
 );
 
+wb_ram_wrapper #(
+  .SIZE (16384)
+) ram_i (
+  .clk    ( clk       ),
+  .rstn_i ( rstn_i    ),
+  .wb_bus ( slaves[1] )
+);
+
 wb_xbar #(
     .TAGSIZE        ( 1 ),
-    .N_SLAVE        ( 1 ),
+    .N_SLAVE        ( 2 ),
     .N_MASTER       ( 3 )
 ) wb_xbar_i (
     .clk_i          ( clk       ),
     .rst_i          ( ~rstn_i   ),
-    .SSTART_ADDR    ({32'h0}    ),
-    .SEND_ADDR      ({32'h1000} ),
+    .SSTART_ADDR    ({`RAM_START_ADDR, `ROM_START_ADDR}),
+    .SEND_ADDR      ({`RAM_END_ADDR,   `ROM_END_ADDR}),
     .wb_slave_port  (masters    ),
     .wb_master_port (slaves     )
 );

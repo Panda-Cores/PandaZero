@@ -1,5 +1,7 @@
 /**/logs
 /**/obj_dir
+/**/build
+/**/*.hex*
 *.sim
 *.runs
 *.hbs
@@ -17,4 +19,4 @@
 *.xpr
 .Xil
 *.zip
-/ips/*/ip
+*result.txt
