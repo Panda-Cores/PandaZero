@@ -1,3 +1,5 @@
+default: rtltest
+
 rtltest:
 	make -C tests/rtl run
 
