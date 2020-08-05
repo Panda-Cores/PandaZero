@@ -12,9 +12,9 @@ build:
 	@if [ ! -d "./build" ]; then mkdir build; fi
 
 %: %.c build
-	riscv64-unknown-linux-gnu-gcc ../../common/crt.s $< $(CURRENT_TEST) $(RISCV_GCC_OPTS) -o build/$@ $(RISCV_LINK_OPTS)
-	@riscv64-unknown-linux-gnu-objdump $(RISCV_OBJDUMP_OPTS) build/$@ > build/$@.dmp
-	@riscv64-unknown-linux-gnu-objcopy -O binary build/$@ build/$@.bin
+	riscv32-unknown-elf-gcc ../../common/crt.s $< $(CURRENT_TEST) $(RISCV_GCC_OPTS) -o build/$@ $(RISCV_LINK_OPTS)
+	@riscv32-unknown-elf-objdump $(RISCV_OBJDUMP_OPTS) build/$@ > build/$@.dmp
+	@riscv32-unknown-elf-objcopy -O binary build/$@ build/$@.bin
 	@hexdump build/$@.bin > main.hex.dmp
 	@python3 ../../common/hexlify.py
 	rm -rf main.hex.dmp
