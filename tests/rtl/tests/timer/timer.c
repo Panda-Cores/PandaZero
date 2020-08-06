@@ -18,6 +18,7 @@ int timer(){
         if(t_new > 0x300)
             return 1;
     }
+    *t_cfg = 0;
 
     return 0;
 }

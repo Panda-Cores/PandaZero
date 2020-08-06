@@ -12,7 +12,11 @@ run:
 		cat tests/$$test/result.txt ; \
 	done
 
+verilate:
+	make -f vrltr.mk
+
 clean:
 	@for test in $(TESTS) ; do \
 		make -C tests/$$test clean ; \
 	done
+	make -f vrltr.mk clean

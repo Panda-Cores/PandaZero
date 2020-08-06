@@ -1,32 +1,32 @@
-../../../../rtl/core/core_top.sv 
-../../../../rtl/core_wrapper.sv
-../../../../rtl/core/registerFile.sv 
-../../../../rtl/core/pipelineStages/execute/EX_stage.sv 
-../../../../rtl/core/pipelineStages/execute/alu.sv 
-../../../../rtl/core/pipelineStages/execute/executer.sv 
-../../../../rtl/core/pipelineStages/instructionDecode/ID_stage.sv 
-../../../../rtl/core/pipelineStages/instructionDecode/decoder.sv 
-../../../../rtl/core/pipelineStages/instructionFetch/IF_stage.sv 
-../../../../rtl/core/pipelineStages/mem/MEM_stage.sv 
-../../../../rtl/core/pipelineStages/write_back/WB_stage.sv
+../../rtl/core/core_top.sv 
+../../rtl/core_wrapper.sv
+../../rtl/core/registerFile.sv 
+../../rtl/core/pipelineStages/execute/EX_stage.sv 
+../../rtl/core/pipelineStages/execute/alu.sv 
+../../rtl/core/pipelineStages/execute/executer.sv 
+../../rtl/core/pipelineStages/instructionDecode/ID_stage.sv 
+../../rtl/core/pipelineStages/instructionDecode/decoder.sv 
+../../rtl/core/pipelineStages/instructionFetch/IF_stage.sv 
+../../rtl/core/pipelineStages/mem/MEM_stage.sv 
+../../rtl/core/pipelineStages/write_back/WB_stage.sv
 
-../../../../rtl/memory/ram.sv
-../../../../rtl/memory/wb_ram_wrapper.sv
+../../rtl/memory/ram.sv
+../../rtl/memory/wb_ram_wrapper.sv
 
-../../../../ips/wishbone/src/wb_xbar.sv
-../../../../ips/wishbone/src/wb_master.sv
-../../../../ips/wishbone/src/wb_slave.sv
--I../../../../ips/wishbone/includes
+../../ips/wishbone/src/wb_xbar.sv
+../../ips/wishbone/src/wb_master.sv
+../../ips/wishbone/src/wb_slave.sv
+-I../../ips/wishbone/includes
 
-../../../../ips/load_store_unit/src/load_unit.sv
-../../../../ips/load_store_unit/src/store_unit.sv
-../../../../ips/load_store_unit/src/lsu.sv
+../../ips/load_store_unit/src/load_unit.sv
+../../ips/load_store_unit/src/store_unit.sv
+../../ips/load_store_unit/src/lsu.sv
 
-../../../../ips/debug_module/src/dbg_module.sv
-../../../../ips/debug_module/src/core_dbg_module.sv
--I../../../../ips/debug_module/includes
+../../ips/debug_module/src/dbg_module.sv
+../../ips/debug_module/src/core_dbg_module.sv
+-I../../ips/debug_module/includes
 
-../../../../ips/timer_module/src/timer.sv
--I../../../../ips/timer_module/includes
+../../ips/timer_module/src/timer.sv
+-I../../ips/timer_module/includes
 
--I../../../../rtl/includes
+-I../../rtl/includes

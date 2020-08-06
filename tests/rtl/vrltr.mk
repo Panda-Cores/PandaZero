@@ -36,7 +36,7 @@ VERILATOR_FLAGS += --coverage
 VERILATOR_FLAGS += --trace-structs
 # VERILATOR_FLAGS += --prefix top
 
-INCLUDE := $(shell cat ../../common/sources.txt)
+INCLUDE := $(shell cat common/sources.txt)
 
 VERILATOR_FLAGS += --top-module core_wrapper
 
@@ -45,25 +45,11 @@ default: run
 
 run:
 	@echo "-- VERILATE ----------------"
-	$(VERILATOR) $(VERILATOR_FLAGS) $(INCLUDE) sim_main.cpp
+	$(VERILATOR) $(VERILATOR_FLAGS) $(INCLUDE) common/sim_main.cpp
 
 	@echo
 	@echo "-- COMPILE -----------------"
 	$(MAKE) -j 4 -C obj_dir -f Vcore_wrapper.mk 
-	
-
-	@echo
-	@echo "-- RUN ---------------------"
-	@mkdir -p logs
-	obj_dir/Vcore_wrapper --trace > result.txt
-
-	@echo
-	@echo "-- COVERAGE ----------------"
-	$(VERILATOR_COVERAGE) --annotate logs/annotated logs/coverage.dat
-
-	@echo
-	@echo "-- TEST RESULT -------------"
-	@echo "   `cat result.txt`"
 
 clean:
-	-rm -rf obj_dir logs *.log *.dmp *.vpd coverage.dat result.txt
+	-rm -rf obj_dir
