@@ -26,4 +26,7 @@
 ../../../../ips/debug_module/src/core_dbg_module.sv
 -I../../../../ips/debug_module/includes
 
+../../../../ips/timer_module/src/timer.sv
+-I../../../../ips/timer_module/includes
+
 -I../../../../rtl/includes
