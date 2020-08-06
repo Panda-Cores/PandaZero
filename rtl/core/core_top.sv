@@ -39,6 +39,7 @@ logic                ID_IF_ack;
 logic                IF_ID_valid;
 logic [31:0]         IF_ID_instr;
 logic [31:0]         IF_ID_pc;
+logic                IF_ID_br_pred;
 
 //ID-EX
 logic                EX_ID_ack;
@@ -48,6 +49,7 @@ logic [31:0]         ID_EX_pc;
 logic [31:0]         ID_EX_rs1;
 logic [31:0]         ID_EX_rs2;
 logic [31:0]         ID_EX_imm;
+logic                ID_EX_br_pred;
 
 //ID
 logic [4:0]          ID_REG_rs1;
@@ -160,7 +162,8 @@ IF_stage IF_i (
     .wb_bus      ( IF_wb_bus     ),
     .branch_i    ( branch        ),
     .pc_i        ( IF_pc         ),
-    .dbg_pc_o    ( dbg_curr_pc   )
+    .dbg_pc_o    ( dbg_curr_pc   ),
+    .br_pred_o   ( IF_ID_br_pred )
 );
 
 ID_stage ID_i (
@@ -171,6 +174,7 @@ ID_stage ID_i (
     .valid_i  ( IF_ID_valid  ),
     .ack_o    ( ID_IF_ack    ),
     .instr_i  ( IF_ID_instr  ),
+    .br_pred_i( IF_ID_br_pred),
     .pc_i     ( IF_ID_pc     ),
     .ack_i    ( EX_ID_ack    ),
     .valid_o  ( ID_EX_valid  ),
@@ -179,6 +183,7 @@ ID_stage ID_i (
     .rs1_o    ( ID_EX_rs1    ),
     .rs2_o    ( ID_EX_rs2    ),
     .imm_o    ( ID_EX_imm    ),
+    .br_pred_o( ID_EX_br_pred),
     .rs1a_o   ( ID_REG_rs1   ),
     .rs2a_o   ( ID_REG_rs2   ),
     .rs1d_i   ( REG_ID_rs1_d ),
@@ -198,6 +203,7 @@ EX_stage EX_i (
     .rs1_i    ( ID_EX_rs1     ),
     .rs2_i    ( ID_EX_rs2     ),
     .imm_i    ( ID_EX_imm     ),
+    .br_pred_i( ID_EX_br_pred ),
     .ack_i    ( MEM_EX_ack    ),
     .valid_o  ( EX_MEM_valid  ),
     .pc_o     ( EX_MEM_pc     ),

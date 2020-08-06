@@ -33,6 +33,7 @@ module ID_stage
     input logic         valid_i,        // P. stage has data ready
     input logic [31:0]  instr_i,        // Instruction
     input logic [31:0]  pc_i,           // Program counter
+    input logic         br_pred_i,      // Branch predicted (to be fed to EX stage)
     output logic        ack_o,          // Notify p. stage that data is read
     // ID <-> EX
     input logic         ack_i,          // Data has been read by n. stage
@@ -42,6 +43,7 @@ module ID_stage
     output logic [31:0] rs1_o,          // Data rs1
     output logic [31:0] rs2_o,          // Data rs2
     output logic [31:0] imm_o,          // Immediate
+    output logic        br_pred_o,      // Branch predicted by IF stage
     // WB <-> ID
     input logic [4:0]   rd_i            // Destination register of WB stage
 );
@@ -65,6 +67,7 @@ struct packed {
     logic [31:0]    rs1;
     logic [31:0]    rs2;
     logic [31:0]    imm;
+    logic           br_pred;
 } data_n, data_q;
 
 // Decodes instructions into pointers to registers
@@ -78,6 +81,7 @@ decoder decoder_i(
     .invalid( invalid   )
 );
 
+assign br_pred_o = data_q.br_pred;
 assign valid_o = data_q.valid;
 assign instr_o = data_q.instr;
 assign pc_o    = data_q.pc;
@@ -110,7 +114,7 @@ begin
         // Core just stops
         if(!reg_lock_q[rs1a_o] && !reg_lock_q[rs2a_o] && ! invalid) begin
             ack_o          = 1'b1;
-            data_n         = {1'b1, instr_i, pc_i, rs1d_i, rs2d_i, imm};
+            data_n         = {1'b1, instr_i, pc_i, rs1d_i, rs2d_i, imm, br_pred_i};
             rd_n           = rd;
             reg_lock_n[rd] = 1'b1;
         end
