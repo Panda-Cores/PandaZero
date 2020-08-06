@@ -13,7 +13,7 @@ int main(int argc, char** argv, char** env) {
 
     tb->load_program((char*) "main.hex", 0x0);
 
-    for(int i = 0; i < 100; i++){
+    for(int i = 0; i < 1000; i++){
         for(int j = 0; j < 200; j++)
             tb->tick();
         if(tb->read_mem(0x7ff0) != 0)
