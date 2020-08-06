@@ -26,6 +26,7 @@ module IF_stage (
     output logic         valid_o,
     output logic  [31:0] instr_o,
     output logic  [31:0] pc_o,
+    output logic         br_pred_o,
     //Memory
     wb_bus_t.master      wb_bus,
     //Branching
@@ -37,19 +38,25 @@ module IF_stage (
 
 logic incr_pc;
 logic [31:0] pc_n;
+// current pc
 logic [31:0] pc_q;
 logic [31:0] mem_data;
 logic read;
 logic read_valid;
+
+// branch predictor
+logic [31:0] pred_pc;
+logic        pred_br;
 
 // Data register, 2x32 bit + valid: instr, pc
 struct packed {
     logic           valid;
     logic [31:0]    instr;
     logic [31:0]    pc;
+    logic           branch_prediced;
 } data_n, data_q;
 
-
+assign br_pred_o = data_q.branch_prediced;
 assign valid_o = data_q.valid;
 assign instr_o = data_q.instr;
 assign pc_o = data_q.pc;
@@ -66,6 +73,14 @@ load_unit lu_i
     .wb_bus             ( wb_bus    )
 );
 
+branch_predictor bp_i
+(
+    .instr_i ( mem_data ),
+    .pc_i    ( pc_q     ),
+    .pc_o    ( pred_pc  ),
+    .branch  ( pred_br  )
+);
+
 always_comb
 begin
     read    = 1'b0;
@@ -78,7 +93,7 @@ begin
     if((!data_q.valid || ack_i)) begin
         read = 1'b1;
         if(read_valid) begin
-            data_n         = {1'b1, mem_data, pc_q};
+            data_n         = {1'b1, mem_data, pc_q, pred_br};
             incr_pc        = 1'b1;
         end
     end
@@ -101,7 +116,11 @@ begin
         if(branch_i || flush_i)
             pc_q <= pc_i;
         else if(incr_pc && !halt_i)
-            pc_q <= pc_q + 4;
+            // If a branch was predicted, jump instead of increment the pc
+            if(pred_br)
+                pc_q <= pred_pc;
+            else
+                pc_q <= pc_q + 4;
     end
 end
 

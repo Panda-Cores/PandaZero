@@ -7,6 +7,7 @@
 ../../rtl/core/pipelineStages/instructionDecode/ID_stage.sv 
 ../../rtl/core/pipelineStages/instructionDecode/decoder.sv 
 ../../rtl/core/pipelineStages/instructionFetch/IF_stage.sv 
+../../rtl/core/pipelineStages/instructionFetch/branch_predictor.sv 
 ../../rtl/core/pipelineStages/mem/MEM_stage.sv 
 ../../rtl/core/pipelineStages/write_back/WB_stage.sv
 

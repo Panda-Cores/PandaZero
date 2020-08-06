@@ -29,6 +29,7 @@ module EX_stage(
     input logic [31:0]  rs1_i,
     input logic [31:0]  rs2_i,
     input logic [31:0]  imm_i,
+    input logic         br_pred_i,
     //EX-MEM
     input logic         ack_i,
     output logic        valid_o,
@@ -84,7 +85,12 @@ begin
     // data and set valid=1
     if((!data_q.valid || ack_i) && valid_i && (!flush_i)) begin
         ack_o          = 1'b1;
-        data_n         = {1'b1, branch, instr_i, pc_i, result, rs2_i};
+        if(branch == br_pred_i)
+            data_n         = {1'b1, 1'b0, instr_i, pc_i, result, rs2_i};
+        else if(branch && !br_pred_i)
+            data_n         = {1'b1, 1'b1, instr_i, pc_i, result, rs2_i};
+        else if(!branch && br_pred_i)
+            data_n         = {1'b1, 1'b1, instr_i, pc_i, pc_i+4, rs2_i};
     end
 
     // Invalidate if flush
