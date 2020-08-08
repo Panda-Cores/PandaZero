@@ -62,17 +62,37 @@ assign instr_o = data_q.instr;
 assign pc_o = data_q.pc;
 assign dbg_pc_o = pc_q;
 
-load_unit lu_i
-(
-    .clk                ( clk       ),
-    .rstn_i             ( rstn_i    ),
-    .read_i             ( read      ),
-    .addr_i             ( pc_q      ),
-    .valid_o            ( read_valid),
-    .data_o             ( mem_data  ),
-    .wb_bus             ( wb_bus    )
-);
+`define INSTR_CACHE
+`define BRANCH_PREDICTOR
 
+`ifdef INSTR_CACHE
+    cache#(
+    ) icache_i (
+        .clk        ( clk       ),
+        .rstn_i     ( rstn_i    ),
+        .read_i     ( read      ),
+        .write_i    ( 1'b0      ),
+        .we_i       ( 4'b0      ),
+        .addr_i     ( pc_q      ),
+        .data_i     ( 32'b0     ),
+        .data_o     ( mem_data  ),
+        .valid_o    ( read_valid),
+        .wb_bus     ( wb_bus    )
+    );
+`else
+    load_unit lu_i
+    (
+        .clk                ( clk       ),
+        .rstn_i             ( rstn_i    ),
+        .read_i             ( read      ),
+        .addr_i             ( pc_q      ),
+        .valid_o            ( read_valid),
+        .data_o             ( mem_data  ),
+        .wb_bus             ( wb_bus    )
+    );
+`endif
+
+`ifdef BRANCH_PREDICTOR
 branch_predictor bp_i
 (
     .instr_i ( mem_data ),
@@ -80,6 +100,10 @@ branch_predictor bp_i
     .pc_o    ( pred_pc  ),
     .branch  ( pred_br  )
 );
+`else
+assign pred_pc = 'b0;
+assign pred_br = 'b0;
+`endif
 
 always_comb
 begin

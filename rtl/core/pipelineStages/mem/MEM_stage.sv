@@ -61,6 +61,23 @@ assign valid_o = data_q.valid;
 assign data_o = data_q.data;
 assign instr_o = data_q.instr;
 
+// `define DATA_CACHE
+
+`ifdef DATA_CACHE
+    cache#(
+    ) dcache_i (
+        .clk        ( clk       ),
+        .rstn_i     ( rstn_i    ),
+        .read_i     ( load      ),
+        .write_i    ( store     ),
+        .we_i       ( lsu_we    ),
+        .addr_i     ( result_i  ),
+        .data_i     ( rs2_i     ),
+        .data_o     ( lu_data   ),
+        .valid_o    ( lsu_valid ),
+        .wb_bus     ( wb_bus    )
+    );
+`else
 lsu lsu_i(
     .clk        ( clk       ),
     .rstn_i     ( rstn_i    ),
@@ -73,6 +90,7 @@ lsu lsu_i(
     .valid_o    ( lsu_valid ),
     .wb_bus     ( wb_bus    )
 );
+`endif
 
 always_comb
 begin

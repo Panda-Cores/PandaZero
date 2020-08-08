@@ -10,3 +10,6 @@
 [submodule "ips/debug_module"]
 	path = ips/debug_module
 	url = git@github.com:Panda-Cores/debug_module.git
+[submodule "ips/caches"]
+	path = ips/caches
+	url = git@github.com:Panda-Cores/caches.git

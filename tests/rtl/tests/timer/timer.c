@@ -1,3 +1,4 @@
+
 int timer(){
     volatile int *timer = (int *) 0x8000;
     volatile int *t_cfg = (int *) 0x8004;
@@ -10,6 +11,7 @@ int timer(){
     *cmp = 0x300;
     *t_cfg = 1;
     t_new = *timer;
+
     while(t_new > t_old){
         t_old = t_new;
         t_new = *timer;

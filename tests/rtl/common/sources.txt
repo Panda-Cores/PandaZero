@@ -11,6 +11,9 @@
 ../../rtl/core/pipelineStages/mem/MEM_stage.sv 
 ../../rtl/core/pipelineStages/write_back/WB_stage.sv
 
+../../ips/caches/src/cache.sv
+../../ips/caches/src/cache_line.sv
+
 ../../rtl/memory/ram.sv
 ../../rtl/memory/wb_ram_wrapper.sv
 
