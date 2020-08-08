@@ -1,7 +1,7 @@
 #include "mem_access.h"
 
 int main() {
-    unsigned int *magic_addr = (unsigned int*) 0x7ff0;
+    volatile unsigned int *magic_addr = (unsigned int*) 0x7ff0;
     
     int result = mem_access();
 

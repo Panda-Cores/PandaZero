@@ -4,9 +4,8 @@ int performance(){
     volatile int *timer = (int *) 0x8000;
     volatile int *t_cfg = (int *) 0x8004;
     volatile int *cmp   = (int *) 0x8008;
-    volatile int tmp;
 
-    int t_old = 0;
+    volatile int t_old = 0;
     int t_new = 0;
 
     *timer = 0;
