@@ -11,8 +11,6 @@ Quick overview:
 * Debug module (not consistent with RV spec for debug modules, but supports extensive testing)
 
 Upcoming features/improvements (in order of priority):
-* L1 Instruction and data cache
-* EEI
 * Exception raising on illegal instruction
 * Making debug module consistent with RV spec
 * Extension to RV32F ISA (floating point)
