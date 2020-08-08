@@ -13,6 +13,8 @@
 // 
 // Functionality: A simple branch predictor, based on forward
 //                and backward branches
+//                If the branch is backwards, it is likely that
+//                we are in a loop - take the branch
 //
 // ------------------------------------------------------------
 
@@ -34,6 +36,7 @@ assign imm = {{19{instr_i[31]}}, instr_i[31], instr_i[7], instr_i[30 : 25], inst
 always_comb
 begin
     branch = 1'b0;
+    // If instr_i[31] is set, the offset is negative
     if(instr_i[6:0] == `BRANCH && instr_i[31]) begin
             branch = 1'b1;
             pc_o = pc_i + imm;
