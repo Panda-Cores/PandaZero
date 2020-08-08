@@ -4,6 +4,8 @@ A RISC-V processor, destined to become a microcontroller!
 Quick overview:
 * RV32I ISA
 * 5 Stage Pipeline
+* WB instruction cache
+* WB data cache (currently disabled because of missing EEI - need to be able to directly write to slaves)
 * Simple branch predictor (predict backward branches as taken)
 * Pipeline hazard detection & mitigation by HW via pipeline stalls
 * Core connected to wishbone bus
