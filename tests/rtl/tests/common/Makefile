@@ -1,5 +1,5 @@
 
-RISCV_GCC_OPTS ?= -DPREALLOCATE=1 -mcmodel=medany -march=rv32i -mabi=ilp32 -static -std=gnu99 -O0 -ffast-math -fno-common -fno-builtin-printf
+RISCV_GCC_OPTS ?= -DPREALLOCATE=1 -mcmodel=medany -march=rv32i -mabi=ilp32 -static -std=gnu99 -O1 -ffast-math -fno-common -fno-builtin-printf
 RISCV_LINK_OPTS ?= -march=rv32i -mabi=ilp32 -static -nostdlib -nostartfiles -lm -lgcc
 RISCV_OBJDUMP_OPTS ?= -d
 
