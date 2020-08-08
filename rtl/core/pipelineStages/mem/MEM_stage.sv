@@ -89,6 +89,8 @@ c_region_sel#(
 );
 
 cache#(
+    .N_WORDS_PER_LINE ( 8  ),
+    .N_LINES          ( 32 )
 ) dcache_i (
     .clk        ( clk           ),
     .rstn_i     ( rstn_i        ),

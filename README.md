@@ -4,7 +4,8 @@ A RISC-V processor, destined to become a microcontroller!
 Quick overview:
 * RV32I ISA
 * 5 Stage Pipeline
-* Write-Back instruction & data cache
+* 1kB L1 instruction cache
+* 1kB L1 data cache (write back)
 * Simple branch predictor (predict backward branches as taken)
 * Pipeline hazard detection & mitigation by HW via pipeline stalls
 * Core connected to wishbone bus
