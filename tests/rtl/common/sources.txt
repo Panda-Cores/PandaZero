@@ -9,6 +9,7 @@
 ../../rtl/core/pipelineStages/instructionFetch/IF_stage.sv 
 ../../rtl/core/pipelineStages/instructionFetch/branch_predictor.sv 
 ../../rtl/core/pipelineStages/mem/MEM_stage.sv 
+../../rtl/core/pipelineStages/mem/c_region_sel.sv 
 ../../rtl/core/pipelineStages/write_back/WB_stage.sv
 
 ../../ips/caches/src/cache.sv

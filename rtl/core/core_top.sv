@@ -27,7 +27,8 @@ module core_top (
 // IF-Memory
     wb_bus_t.master      IF_wb_bus,
 // MEM-Memory
-    wb_bus_t.master      MEM_wb_bus,
+    wb_bus_t.master      MEM_wb_bus_c,
+    wb_bus_t.master      MEM_wb_bus_lsu,
 // Debug bus
     dbg_intf             dbg_bus
 );
@@ -223,7 +224,8 @@ MEM_stage MEM_i (
     .instr_i     ( EX_MEM_instr  ),
     .result_i    ( EX_MEM_result ),
     .rs2_i       ( EX_MEM_rs2    ),
-    .wb_bus      ( MEM_wb_bus    ),
+    .wb_bus_c    ( MEM_wb_bus_c  ),
+    .wb_bus_lsu  ( MEM_wb_bus_lsu),
     .ack_i       ( WB_MEM_ack    ),
     .valid_o     ( MEM_WB_valid  ),
     .instr_o     ( MEM_WB_instr  ),

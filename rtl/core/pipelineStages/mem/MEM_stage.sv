@@ -35,7 +35,8 @@ module MEM_stage
     input logic [31:0]  rs2_i,
     input logic [31:0]  pc_i,
     //MEM-Memory
-    wb_bus_t.master     wb_bus,
+    wb_bus_t.master     wb_bus_c,
+    wb_bus_t.master     wb_bus_lsu,
     //MEM-WB
     input logic         ack_i,
     output logic        valid_o,
@@ -52,20 +53,70 @@ struct packed {
 
 logic load;
 logic store;
+logic cache_load;
+logic cache_store;
+logic cache_valid;
+logic lsu_load;
+logic lsu_store;
 logic lsu_valid;
-logic lsu_valid_n, lsu_valid_q;
+logic ls_valid;
+logic ls_valid_n, ls_valid_q;
 logic [31:0] lu_data;
 logic [3:0] lsu_we;
+
+//TODO error code
+logic [1:0] error;
 
 assign valid_o = data_q.valid;
 assign data_o = data_q.data;
 assign instr_o = data_q.instr;
 
-// `define DATA_CACHE
+assign ls_valid = lsu_valid | cache_valid;
 
-`ifdef DATA_CACHE
-    cache#(
-    ) dcache_i (
+c_region_sel#(
+    .N_C_REGIONS    ( 1         ),
+    .C_REGION_START ( 32'h0     ),
+    .C_REGION_END   ( 32'h7000  )
+) c_region_sel_i (
+    .load_i         ( load          ),
+    .store_i        ( store         ),
+    .addr_i         ( result_i      ),
+    .cache_load_o   ( cache_load    ),
+    .cache_store_o  ( cache_store   ),
+    .lsu_load_o     ( lsu_load      ),
+    .lsu_store_o    ( lsu_store     ),
+    .error_o        ( error         )
+);
+
+cache#(
+) dcache_i (
+    .clk        ( clk           ),
+    .rstn_i     ( rstn_i        ),
+    .read_i     ( cache_load    ),
+    .write_i    ( cache_store   ),
+    .we_i       ( lsu_we        ),
+    .addr_i     ( result_i      ),
+    .data_i     ( rs2_i         ),
+    .data_o     ( lu_data       ),
+    .valid_o    ( cache_valid   ),
+    .wb_bus     ( wb_bus_c      )
+);
+
+lsu lsu_i(
+    .clk        ( clk       ),
+    .rstn_i     ( rstn_i    ),
+    .read_i     ( lsu_load  ),
+    .write_i    ( lsu_store ),
+    .we_i       ( lsu_we    ),
+    .addr_i     ( result_i  ),
+    .data_i     ( rs2_i     ),
+    .data_o     ( lu_data   ),
+    .valid_o    ( lsu_valid ),
+    .wb_bus     ( wb_bus_lsu)
+);
+
+`ifdef NO_DCACHE
+    lsu lsu_i(
         .clk        ( clk       ),
         .rstn_i     ( rstn_i    ),
         .read_i     ( load      ),
@@ -74,27 +125,14 @@ assign instr_o = data_q.instr;
         .addr_i     ( result_i  ),
         .data_i     ( rs2_i     ),
         .data_o     ( lu_data   ),
-        .valid_o    ( lsu_valid ),
+        .valid_o    ( ls_valid ),
         .wb_bus     ( wb_bus    )
     );
-`else
-lsu lsu_i(
-    .clk        ( clk       ),
-    .rstn_i     ( rstn_i    ),
-    .read_i     ( load      ),
-    .write_i    ( store     ),
-    .we_i       ( lsu_we    ),
-    .addr_i     ( result_i  ),
-    .data_i     ( rs2_i     ),
-    .data_o     ( lu_data   ),
-    .valid_o    ( lsu_valid ),
-    .wb_bus     ( wb_bus    )
-);
 `endif
 
 always_comb
 begin
-    lsu_valid_n = lsu_valid_q;
+    ls_valid_n = ls_valid_q;
     data_n  = data_q;
     ack_o   = 1'b0;
     load    = 1'b0;
@@ -104,22 +142,22 @@ begin
     // Data is no longer valid if we recieved and ack
     if(ack_i) begin
         data_n.valid = 1'b0;
-        lsu_valid_n = 1'b0;
+        ls_valid_n = 1'b0;
     end
 
     case(instr_i[6:0])
         // In case of LOAD or STORE, we give the respective signal
         // to the memory and wait for the next stage to ack
         `LOAD: begin
-            if(!lsu_valid_q && valid_i) begin
-                lsu_valid_n = lsu_valid;
+            if(!ls_valid_q && valid_i) begin
+                ls_valid_n = ls_valid;
                 load        = 1'b1;
             end else if((!data_q.valid || ack_i) && valid_i) begin
                 ack_o          = 1'b1;
                 data_n.valid   = 1'b1;
                 data_n.instr   = instr_i;
-                lsu_valid_n   = 1'b0;
-                lsu_valid_n   = 1'b0;
+                ls_valid_n   = 1'b0;
+                ls_valid_n   = 1'b0;
                 case(instr_i[13:12])
                     2'b00:
                         data_n.data = {{24{lu_data[7]}}, lu_data[7:0]};
@@ -136,8 +174,8 @@ begin
         // In case of LOAD or STORE, we give the respective signal
         // to the memory and wait for the next stage to ack
         `STORE: begin
-            if(!lsu_valid_q && valid_i) begin
-                lsu_valid_n  = lsu_valid;
+            if(!ls_valid_q && valid_i) begin
+                ls_valid_n  = ls_valid;
                 store        = 1'b1;
                 // Write the correct amount of bytes
                 case(instr_i[13:12])
@@ -153,14 +191,14 @@ begin
             end else if((!data_q.valid || ack_i) && valid_i)begin
                 ack_o          = 1'b1;
                 data_n         = {1'b1, instr_i, 32'b0};
-                lsu_valid_n    = 1'b0;
+                ls_valid_n    = 1'b0;
             end
         end
 
         // In case of these, we can directly give the data to the
         // following stage, the pointer to the old next instr (pc+4)
         `AUIPC, `JAL, `JALR: begin
-            lsu_valid_n   = 1'b0;
+            ls_valid_n   = 1'b0;
             if((!data_q.valid || ack_i) && valid_i) begin
                 ack_o          = 1'b1;
                 data_n         = {1'b1, instr_i, pc_i + 4};
@@ -175,7 +213,7 @@ begin
         // unit can work in parallel when other instructions are
         // processed.
         default: begin   
-            lsu_valid_n   = 1'b0;         
+            ls_valid_n   = 1'b0;         
             if((!data_q.valid || ack_i) && valid_i) begin
                 ack_o          = 1'b1;
                 data_n         = {1'b1, instr_i, result_i};
@@ -189,7 +227,7 @@ always_ff @(posedge clk, negedge rstn_i) begin
         data_q <= 'b0;
     end else if(!halt_i) begin
         data_q <= data_n;
-        lsu_valid_q <= lsu_valid_n;
+        ls_valid_q <= ls_valid_n;
     end
 end
 

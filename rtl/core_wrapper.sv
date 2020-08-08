@@ -39,7 +39,7 @@ logic dbg_core_rst_req;
 logic dbg_periph_rst_req;
 
 // Wishbone busses
-wb_bus_t#(.TAGSIZE(1)) masters[3];
+wb_bus_t#(.TAGSIZE(1)) masters[4];
 wb_bus_t#(.TAGSIZE(1)) slaves[3];
 
 // Debug bus
@@ -51,12 +51,13 @@ assign periph_rst_req = (~dbg_periph_rst_req) & rstn_i;
 
 core_top core_i
 (
-    .clk        ( clk           ),
-    .rstn_i     ( rstn_i        ),
-    .rst_reqn_o ( core_rst_reqn ),
-    .IF_wb_bus  ( masters[2]    ),
-    .MEM_wb_bus ( masters[1]    ),
-    .dbg_bus    ( dbg_bus       )
+    .clk            ( clk           ),
+    .rstn_i         ( rstn_i        ),
+    .rst_reqn_o     ( core_rst_reqn ),
+    .IF_wb_bus      ( masters[3]    ),
+    .MEM_wb_bus_c   ( masters[2]    ),
+    .MEM_wb_bus_lsu ( masters[1]    ),
+    .dbg_bus        ( dbg_bus       )
 );
 
 dbg_module dbg_module_i (
@@ -101,7 +102,7 @@ wb_ram_wrapper #(
 wb_xbar #(
     .TAGSIZE        ( 1 ),
     .N_SLAVE        ( 3 ),
-    .N_MASTER       ( 3 )
+    .N_MASTER       ( 4 )
 ) wb_xbar_i (
     .clk_i          ( clk       ),
     .rst_i          ( ~rstn_i   ),
