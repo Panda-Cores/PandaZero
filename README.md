@@ -10,6 +10,8 @@ Quick overview:
 * Pipeline hazard detection & mitigation by HW via pipeline stalls
 * Core connected to wishbone bus
 * Debug module (not consistent with RV spec for debug modules, but supports extensive testing)
+* 1x Timer
+* 8x GPIO
 
 Upcoming features/improvements (in order of priority):
 * Exception raising on illegal instruction
