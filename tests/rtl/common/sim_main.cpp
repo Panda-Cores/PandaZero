@@ -1,12 +1,12 @@
 #include <verilated.h>
-#include "Vcore_wrapper.h"
+#include "Vtestbench.h"
 #include "testbench.h"
 
 
 int main(int argc, char** argv, char** env) {
-    TESTBENCH<Vcore_wrapper> *tb;
+    TESTBENCH<Vtestbench> *tb;
     Verilated::commandArgs(argc, argv);
-    tb = new TESTBENCH<Vcore_wrapper>();
+    tb = new TESTBENCH<Vtestbench>();
     tb->opentrace("logs/trace.vcd");
 
     int result = 0;

@@ -21,7 +21,7 @@ build:
 	@hexdump build/$@.bin > main.hex.dmp
 	@python3 ../../common/hexlify.py
 	rm -rf main.hex.dmp
-	../../obj_dir/Vcore_wrapper --trace > result.txt
+	../../obj_dir/Vtestbench --trace > result.txt
 	# $(VERILATOR_COVERAGE) --annotate logs/annotated logs/coverage.dat
 	
 

@@ -38,7 +38,7 @@ VERILATOR_FLAGS += --trace-structs
 
 INCLUDE := $(shell cat common/sources.txt)
 
-VERILATOR_FLAGS += --top-module core_wrapper
+VERILATOR_FLAGS += --top-module testbench
 
 ######################################################################
 default: run
@@ -49,7 +49,7 @@ run:
 
 	@echo
 	@echo "-- COMPILE -----------------"
-	$(MAKE) -j 4 -C obj_dir -f Vcore_wrapper.mk 
+	$(MAKE) -j 4 -C obj_dir -f Vtestbench.mk 
 
 clean:
 	-rm -rf obj_dir

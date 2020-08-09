@@ -23,6 +23,11 @@ module core_wrapper
 (
     input wire          clk,
     input wire          rstn_i,
+    // GPIO
+    output wire [7:0]   gpio_dir_o,
+    output wire [7:0]   gpio_val_o,
+    input wire [7:0]    gpio_val_i,
+    // Debug interface
     input wire [7:0]    dbg_cmd_i,
     input wire [31:0]   dbg_addr_i,
     input wire [31:0]   dbg_data_i,
@@ -34,13 +39,17 @@ module core_wrapper
 logic core_rst_reqn;
 logic periph_rst_req;
 
+// interrupts
+logic [1:0]   timer_irqs;
+logic [7:0]   gpio_irqs;
+
 // debug signals
 logic dbg_core_rst_req;
 logic dbg_periph_rst_req;
 
 // Wishbone busses
 wb_bus_t#(.TAGSIZE(1)) masters[4];
-wb_bus_t#(.TAGSIZE(1)) slaves[3];
+wb_bus_t#(.TAGSIZE(1)) slaves[4];
 
 // Debug bus
 dbg_intf dbg_bus;
@@ -76,11 +85,13 @@ dbg_module dbg_module_i (
 
 
 `define ROM_START_ADDR 32'h0
-`define ROM_END_ADDR 32'h3fff
+`define ROM_END_ADDR 32'h4000
 `define RAM_START_ADDR 32'h4000
-`define RAM_END_ADDR 32'h7fff
-`define T_START_ADDR 32'h8000
-`define T_END_ADDR 32'h8100
+`define RAM_END_ADDR 32'h8000
+`define TIMER_START_ADDR 32'h8000
+`define TIMER_END_ADDR 32'h8100
+`define GPIO_START_ADDR 32'h8100
+`define GPIO_END_ADDR 32'h8200
 
 // Not really a rom, just the name so far...
 wb_ram_wrapper #(
@@ -101,24 +112,34 @@ wb_ram_wrapper #(
 
 wb_xbar #(
     .TAGSIZE        ( 1 ),
-    .N_SLAVE        ( 3 ),
+    .N_SLAVE        ( 4 ),
     .N_MASTER       ( 4 )
 ) wb_xbar_i (
     .clk_i          ( clk       ),
     .rst_i          ( ~rstn_i   ),
-    .SSTART_ADDR    ({`T_START_ADDR, `RAM_START_ADDR, `ROM_START_ADDR}),
-    .SEND_ADDR      ({`T_END_ADDR,   `RAM_END_ADDR,   `ROM_END_ADDR}),
+    .SSTART_ADDR    ({`GPIO_START_ADDR, `TIMER_START_ADDR, `RAM_START_ADDR, `ROM_START_ADDR}),
+    .SEND_ADDR      ({`GPIO_END_ADDR,   `TIMER_END_ADDR,   `RAM_END_ADDR,   `ROM_END_ADDR}),
     .wb_slave_port  (masters    ),
     .wb_master_port (slaves     )
 );
 
-logic [1:0] timer_intr;
-
 timer timer_i(
-  .clk      ( clk             ),
+  .clk      ( clk            ),
   .rstn_i   ( periph_rst_req ),
-  .interrupt_o  ( timer_intr  ),
-  .wb_bus   ( slaves[2]  )
+  .irq_o    ( timer_irqs     ),
+  .wb_bus   ( slaves[2]      )
+);
+
+gpio_module #(
+  .N_GPIOS ( 8 )
+) gpio_i (
+  .clk      ( clk         ),
+  .rstn_i   ( rstn_i      ),
+  .dir_o    ( gpio_dir_o  ),
+  .val_o    ( gpio_val_o  ),
+  .val_i    ( gpio_val_i  ),
+  .irq_o    ( gpio_irqs   ),
+  .wb_bus   ( slaves[3]   )
 );
 
 endmodule
