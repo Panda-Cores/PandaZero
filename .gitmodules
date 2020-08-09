@@ -13,3 +13,6 @@
 [submodule "ips/caches"]
 	path = ips/caches
 	url = git@github.com:Panda-Cores/caches.git
+[submodule "ips/gpio_module"]
+	path = ips/gpio_module
+	url = git@github.com:Panda-Cores/gpio_module.git

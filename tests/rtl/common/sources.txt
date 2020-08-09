@@ -34,4 +34,9 @@
 ../../ips/timer_module/src/timer.sv
 -I../../ips/timer_module/includes
 
+../../ips/gpio_module/src/gpio_module.sv
+-I../../ips/gpio_module/inc
+
+common/testbench.sv
+
 -I../../rtl/includes
